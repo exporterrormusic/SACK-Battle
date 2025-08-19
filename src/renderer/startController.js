@@ -1,6 +1,12 @@
 // startController.js - Start/Next & Reset orchestration
 (function(global){ function resetOutcomeFlags(){ const ovFn=global.__gameBindings?.applyVictoryDefeatOverlay; if(ovFn){ ovFn._played=false; ovFn._musicApplied=null; ovFn._activeKind=null; } }
   function startHandler(){ const Game=global.Game; if(!Game) return; if(global.__startingMatch) return; const startBtn=document.getElementById('btn-start-game'); if(startBtn){ global.__startingMatch=true; startBtn.disabled=true; setTimeout(()=>{ global.__startingMatch=false; startBtn.disabled=false; },1300); }
+  
+    // Debug: Log what button text was when clicked
+    const buttonText = startBtn ? startBtn.textContent : 'unknown';
+    console.log(`[StartController] Button clicked with text: "${buttonText}"`);
+    console.log(`[StartController] Game running state before start: ${Game.getState().running}`);
+    
     const st=Game.getState(); if(document.querySelector('#boss-image-wrapper .game-overlay.prebattle')) global.__prebattleShownOnce=true; if(global.__prebattleShownOnce) global.__suppressPrebattle=true; if(global.waitingActive){ try { global.setWaiting(false); } catch(_){ } if(global.setWaiting){ global.setWaiting._prevMusic=null; if(global.setWaiting._waitingAudio) try { global.setWaiting._waitingAudio.pause(); } catch(_){ } } global.__prebattleActive=false; const pbw=document.getElementById('boss-image-wrapper'); const preOv=pbw?.querySelector('.game-overlay.prebattle'); preOv&&preOv.remove(); pbw&&pbw.classList.remove('prebattle'); const ovMusic=global.__audioModule?.__audioState?.overlayMusic||null; if(ovMusic && ovMusic.type==='prebattle') global.stopOverlayMusic&&global.stopOverlayMusic('prebattle'); }
     function clearForNew(){ const bossWrapper=document.getElementById('boss-image-wrapper'); const ov=bossWrapper?.querySelector('.game-overlay:not(.prebattle)'); ov&&ov.remove(); bossWrapper?.classList.remove('boss-outcome-victory','boss-outcome-defeat'); const pc=document.getElementById('players-container'); 
       // Remove scoreboard elements and class to show players again
@@ -36,6 +42,14 @@
     }
   clearForNew();
   
+  // Debug: Log player health BEFORE Game.start()
+  if (global.Game && global.Game._rawState && global.Game._rawState.players) {
+    console.log('[StartController] Player health BEFORE Game.start():');
+    Object.entries(global.Game._rawState.players).forEach(([name, player]) => {
+      console.log(`  ${name}: hp=${player.hp}`);
+    });
+  }
+  
   // Always reset burst gauges at start of any game
   if (global.Game && global.Game._rawState && global.Game._rawState.players) {
     Object.values(global.Game._rawState.players).forEach(player => {
@@ -56,6 +70,14 @@
   }
   
   Game.start();
+  
+  // Debug: Log player health AFTER Game.start()
+  if (global.Game && global.Game._rawState && global.Game._rawState.players) {
+    console.log('[StartController] Player health AFTER Game.start():');
+    Object.entries(global.Game._rawState.players).forEach(([name, player]) => {
+      console.log(`  ${name}: hp=${player.hp}`);
+    });
+  }
   // Only increment bossPlaylistIndex if a game has already started
   let shouldAdvance = false;
   if (global.Game && global.Game._rawState) {

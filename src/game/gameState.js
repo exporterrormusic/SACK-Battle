@@ -488,7 +488,8 @@
     emitUpdate();
   },
   getState() { return getPublicState(); }, setPlayerRecord, start() {
-  if (state.running) return;
+  // Don't exit early if game is running - "Next Game" needs to reset health even when running
+  console.log('[Game.start] Starting new game, running state:', state.running);
   
   console.log('[Game.start] Resetting existing players for new game');
   
@@ -545,6 +546,7 @@
   } catch(e) { console.warn('[BossWelcome] Failed to play welcome.mp3', e); }
   if (state.boss.hp <= 0) { const old=state.boss.hp; state.boss.hp = settings.bossHp || 100; noteBossHpChange(old, state.boss.hp, 'start-nonpositive-clamp'); } if (globalVictoryState && state.boss.hp > 0) { console.warn('[Game.start] Clearing stale victory flag'); globalVictoryState = null; } state.boss.lastMove = null; state.boss.visualState = null; state.boss.charged = false; state.attackUpTurns = 0; Object.values(state.players).forEach(p=>{ p.invincibleTurns=0; }); state.bossActionQueue = []; state.pendingBossAction = null; state.lastBossAction = null; state.manualBossAction = null;
     Object.entries(state.players).forEach(([name, p]) => {
+      const oldHp = p.hp;
       p.hp = 3;
       p.dying = false;
       p.visibleGone = false;
@@ -553,6 +555,7 @@
       p.invincibleTurns = 0;
       p.pendingAction = null;
       p.burstGauge = 0; // Reset burst gauge to 0 at start of each game
+      console.log(`[Game.start] FINAL HEALTH RESET: ${name} health ${oldHp} -> ${p.hp}`);
       // Only restore avatar from playerRecords for non-bots, to preserve bot avatars
       if (!p.isBot) {
         const savedAvatar = state.playerRecords[name]?.avatar;

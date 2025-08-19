@@ -79,6 +79,7 @@
         height: '75%', // Reduced from 80% to push avatar slightly higher like burst cards
         borderRadius: '20px',
         objectFit: 'cover',
+        objectPosition: 'top', // Crop from bottom instead of center
         filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.5))',
         animation: 'burstCardPulse 0.6s ease-in-out infinite alternate',
         imageRendering: 'crisp-edges',
@@ -335,6 +336,7 @@
       height: '80%',
       borderRadius: '20px',
       objectFit: 'cover',
+      objectPosition: 'top', // Crop from bottom instead of center
       filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.5))',
       animation: 'burstCardPulse 0.6s ease-in-out infinite alternate',
       imageRendering: 'crisp-edges' // Remove blur/anti-aliasing
