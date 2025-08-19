@@ -1,0 +1,2 @@
+# Railway deployment configuration
+web: node server.js

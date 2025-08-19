@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SACK BATTLE Controls</title>
+  <style>
+    body { 
+      background: transparent; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      margin: 0;
+      padding: 4px;
+      box-sizing: border-box;
+      color: white;
+      font-size: 10px;
+      width: 100%;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 8px;
+      padding: 4px;
+      background: rgba(0,0,0,0.7);
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #ff6b35;
+      margin-bottom: 2px;
+    }
+    
+    .subtitle {
+      font-size: 9px;
+      opacity: 0.8;
+    }
+    
+    .controls-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    
+    button {
+      padding: 6px 8px;
+      font-size: 9px;
+      font-weight: bold;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.4);
+      cursor: pointer;
+      color: white;
+      text-shadow: 1px 1px 1px rgba(0,0,0,0.8);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    
+    .attack-btn { background: linear-gradient(135deg, #ff4444, #cc2222); }
+    .heal-btn { background: linear-gradient(135deg, #44ff44, #22cc22); }
+    .cover-btn { background: linear-gradient(135deg, #4444ff, #2222cc); }
+    .strike-btn { background: linear-gradient(135deg, #ff8844, #cc5522); }
+    .burst-btn { background: linear-gradient(135deg, #ff44ff, #cc22cc); }
+    
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+      border-color: rgba(255,255,255,0.6);
+    }
+    
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .info {
+      background: rgba(0,0,0,0.6);
+      border-radius: 4px;
+      padding: 4px;
+      margin-bottom: 4px;
+      border: 1px solid rgba(255,255,255,0.2);
+      font-size: 9px;
+      line-height: 1.2;
+    }
+    
+    .section-title {
+      font-size: 10px;
+      font-weight: bold;
+      color: #ffa500;
+      margin-bottom: 2px;
+    }
+    
+    .status {
+      font-size: 9px;
+      color: white;
+      text-align: center;
+      opacity: 0.8;
+      background: rgba(0,0,0,0.5);
+      padding: 3px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">SACK BATTLE</div>
+    <div class="subtitle">Interactive Boss Battle</div>
+  </div>
+
+  <div class="controls-container">
+    <button class="attack-btn" data-command="attack">⚔️ Attack (1 dmg, +1 burst)</button>
+    <button class="heal-btn" data-command="heal">💚 Heal (Recover 1 HP)</button>
+    <button class="cover-btn" data-command="cover">🛡️ Cover (Block damage)</button>
+    <button class="strike-btn" data-command="strike">⚡ Strike (3 dmg, +2 burst)</button>
+    <button class="burst-btn" data-command="burst">💥 Burst (10 dmg, needs 5 burst)</button>
+  </div>
+
+  <div class="info">
+    <div class="section-title">🐉 Boss Abilities</div>
+    Attack (1 dmg), Cover (blocks), Charge (next: 3 dmg), Cooldown
+  </div>
+
+  <div class="info">
+    <div class="section-title">⭐ Channel Points</div>
+    Use channel points for team buffs. 1 per player per stream.
+  </div>
+  
+  <div class="status" id="status">Loading...</div>
+
+  <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,651 @@
+/* Player cards and related components */
+
+.player-card {
+  position: relative;
+  background: #2e3350;
+  border-radius: 16px;
+  width: 160px;
+  height: 260px; /* Increased height further to better accommodate portrait aspect ratio */
+  display: block;
+  overflow: visible; /* allow corner badges (revive, respawn) to glow outside */
+  box-shadow:
+    0 0 6px rgba(150, 150, 255, 0.5),
+    inset 0 0 8px rgba(80, 90, 180, 0.8);
+  transition: box-shadow 0.3s ease;
+  user-select: none;
+}
+
+.player-card .player-avatar {
+  width: 100% !important;
+  height: calc(100% - 70px) !important; /* Reserve space for action bar (40px) and header (30px) */
+  object-fit: cover !important;
+  object-position: center !important; /* Ensure better centering */
+  display: block !important;
+  filter: brightness(0.92);
+  border-radius: 0 0 16px 16px !important; /* Only round bottom corners */
+  position: absolute !important;
+  top: 40px !important; /* Position below the action bar */
+  left: 0 !important;
+  z-index: 1 !important;
+}
+
+/* Header overlay (bottom) */
+.player-header {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 4px 6px 6px;
+  background: linear-gradient(0deg, rgba(15,20,34,0.78), rgba(15,20,34,0.18));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 7;
+  backdrop-filter: blur(4px);
+}
+
+.player-rank {
+  order:2;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #95a8ff;
+  text-shadow: 0 0 4px #4d5cae;
+  letter-spacing:0.08em;
+  opacity:0.85;
+}
+
+.player-name {
+  order:1;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #d5dcff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+  text-shadow:0 0 6px #6f78c8,0 0 10px #95a2ff;
+  letter-spacing:0.09em;
+}
+
+/* Action bar section (top) */
+.player-last-action {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px; /* Fixed height for action bar section */
+  padding: 8px 6px;
+  background: rgba(18,24,36,0.85);
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: #ffffff;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 6px rgba(0,0,0,0.9), 0 0 10px rgba(255,255,255,0.25);
+  z-index: 6;
+  text-transform: uppercase;
+  backdrop-filter: blur(5px) brightness(1.15);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px 16px 0 0; /* Only round top corners */
+  box-shadow: 0 0 10px 2px rgba(255,255,255,0.08), inset 0 0 12px rgba(255,255,255,0.08);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-last-action.action-attack {
+  background: radial-gradient(circle at 50% 30%, rgba(255,60,60,0.95), rgba(110,0,0,0.65)) , linear-gradient(0deg,rgba(120,0,0,0.5),rgba(40,0,0,0.15));
+  border-color: rgba(255,80,80,0.75);
+  box-shadow: 0 0 14px 4px rgba(255,40,40,0.6), inset 0 0 10px rgba(255,140,140,0.55);
+}
+
+.player-last-action.action-heal {
+  background: radial-gradient(circle at 50% 30%, rgba(70,220,70,0.9), rgba(0,90,0,0.6)) , linear-gradient(0deg,rgba(0,120,0,0.45),rgba(0,40,0,0.15));
+  border-color: rgba(90,235,120,0.7);
+  box-shadow: 0 0 14px 4px rgba(70,255,120,0.55), inset 0 0 10px rgba(150,255,180,0.4);
+}
+
+.player-last-action.action-cover {
+  background: radial-gradient(circle at 50% 30%, rgba(80,140,255,0.92), rgba(0,35,110,0.65)) , linear-gradient(0deg,rgba(0,70,155,0.5),rgba(0,35,90,0.15));
+  border-color: rgba(120,170,255,0.7);
+  box-shadow: 0 0 14px 4px rgba(90,160,255,0.55), inset 0 0 10px rgba(150,200,255,0.45);
+}
+
+.player-last-action.action-aggressive {
+  background: radial-gradient(circle at 50% 30%, rgba(255,20,20,0.98), rgba(180,0,0,0.85)) , linear-gradient(0deg,rgba(150,0,0,0.7),rgba(60,0,0,0.2));
+  border-color: rgba(255,60,60,0.9);
+  box-shadow: 
+    0 0 20px 6px rgba(255,0,0,0.8), 
+    0 0 35px 12px rgba(255,40,40,0.4),
+    inset 0 0 15px rgba(255,100,100,0.7);
+  animation: strikeRadiate 2s ease-in-out infinite;
+}
+
+@keyframes strikeRadiate {
+  0%, 100% { 
+    box-shadow: 
+      0 0 20px 6px rgba(255,0,0,0.8), 
+      0 0 35px 12px rgba(255,40,40,0.4),
+      inset 0 0 15px rgba(255,100,100,0.7);
+  }
+  50% { 
+    box-shadow: 
+      0 0 30px 10px rgba(255,0,0,1), 
+      0 0 50px 18px rgba(255,20,20,0.6),
+      inset 0 0 20px rgba(255,120,120,0.9);
+  }
+}
+
+.player-last-action.waiting {
+  background: rgba(60,65,80,0.8);
+  border-color: rgba(120,130,150,0.5);
+  box-shadow: 0 0 8px 2px rgba(100,110,130,0.3), inset 0 0 10px rgba(140,150,170,0.2);
+  color: rgba(180,190,210,0.8);
+  text-shadow: 0 0 4px rgba(120,130,150,0.6);
+}
+
+/* Hearts container - adjust for new layout */
+.hearts-container {
+  position: absolute;
+  left: 8px;
+  top: 45%; /* Moved up slightly from 50% */
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Increased spacing from 6px to 10px */
+  z-index: 7;
+  margin-top: 15px; /* Reduced offset from 20px to 15px */
+  padding: 8px 6px; /* Added padding for shadow backdrop */
+  background: linear-gradient(135deg, 
+    rgba(0, 0, 0, 0.3) 0%, 
+    rgba(0, 0, 0, 0.15) 50%, 
+    rgba(0, 0, 0, 0.1) 100%); /* Shadow gradient backdrop */
+  border-radius: 8px;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); /* Added shadow for better visibility */
+}
+
+/* Halo-inspired Military Health Hearts - Red Theme */
+.heart {
+  width: 22px;
+  height: 22px;
+  position: relative;
+  background: linear-gradient(135deg, 
+    rgba(255, 60, 60, 0.95) 0%, 
+    rgba(220, 40, 40, 1) 40%, 
+    rgba(180, 20, 20, 0.9) 100%);
+  border: 2px solid rgba(255, 100, 100, 0.8);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 160ms ease;
+  box-shadow: 
+    0 0 8px rgba(255, 80, 80, 0.6),
+    inset 0 0 6px rgba(255, 140, 140, 0.4);
+  backdrop-filter: blur(2px);
+  transform: rotate(45deg);
+}
+
+.heart::before {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(45deg,
+    rgba(255, 180, 180, 1),
+    rgba(255, 120, 120, 0.9));
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg) translate(-3px, -3px);
+  box-shadow: 
+    0 0 4px rgba(255, 140, 140, 0.8),
+    inset 0 0 2px rgba(255, 200, 200, 0.6);
+  animation: heartCoreGlow 2s ease-in-out infinite;
+}
+
+.heart::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(45deg,
+    rgba(255, 180, 180, 1),
+    rgba(255, 120, 120, 0.9));
+  border-radius: 50% 50% 0 50%;
+  transform: rotate(-45deg) translate(3px, -3px);
+  box-shadow: 
+    0 0 4px rgba(255, 140, 140, 0.8),
+    inset 0 0 2px rgba(255, 200, 200, 0.6);
+  animation: heartCoreGlow 2s ease-in-out infinite;
+}
+
+.heart-empty {
+  background: linear-gradient(135deg, 
+    rgba(80, 60, 60, 0.7) 0%, 
+    rgba(60, 40, 40, 0.9) 40%, 
+    rgba(50, 30, 30, 0.8) 100%);
+  border-color: rgba(120, 80, 80, 0.6);
+  box-shadow: 
+    0 0 4px rgba(100, 60, 60, 0.4),
+    inset 0 0 4px rgba(120, 80, 80, 0.3);
+  opacity: 0.6;
+}
+
+.heart-empty::before {
+  background: linear-gradient(45deg,
+    rgba(140, 100, 100, 0.8),
+    rgba(120, 80, 80, 0.6));
+  box-shadow: 
+    0 0 2px rgba(120, 80, 80, 0.5),
+    inset 0 0 1px rgba(160, 120, 120, 0.4);
+  animation: none;
+}
+
+.heart-empty::after {
+  background: linear-gradient(45deg,
+    rgba(140, 100, 100, 0.8),
+    rgba(120, 80, 80, 0.6));
+  box-shadow: 
+    0 0 2px rgba(120, 80, 80, 0.5),
+    inset 0 0 1px rgba(160, 120, 120, 0.4);
+  animation: none;
+}
+
+@keyframes heartCoreGlow {
+  0%, 100% { 
+    opacity: 0.8;
+    transform: rotate(-45deg) translate(-3px, -3px) scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: rotate(-45deg) translate(-3px, -3px) scale(1.1);
+    box-shadow: 
+      0 0 8px rgba(255, 140, 140, 1),
+      inset 0 0 4px rgba(255, 200, 200, 0.8);
+  }
+}
+
+/* Heart change animations */
+.heart.hit { animation: heartHit 620ms cubic-bezier(.65,.02,.4,.99); }
+.heart.heal { animation: heartHeal 700ms cubic-bezier(.65,.02,.4,.99); }
+
+@keyframes heartHit { 
+  0% {
+    transform: rotate(45deg) scale(1) translateZ(0); 
+    filter: brightness(1);
+    box-shadow: 
+      0 0 8px rgba(255, 80, 80, 0.6),
+      inset 0 0 6px rgba(255, 140, 140, 0.4);
+  } 
+  12% {
+    transform: rotate(45deg) scale(1.3) rotate(8deg); 
+    filter: brightness(1.6) saturate(1.5);
+    box-shadow: 
+      0 0 16px rgba(255, 40, 40, 0.9),
+      inset 0 0 8px rgba(255, 100, 100, 0.7);
+  } 
+  24% {
+    transform: rotate(45deg) scale(0.7) rotate(-6deg); 
+    filter: brightness(0.4) saturate(0.3);
+    box-shadow: 
+      0 0 4px rgba(120, 40, 40, 0.4),
+      inset 0 0 3px rgba(100, 30, 30, 0.3);
+  } 
+  55% {
+    transform: rotate(45deg) scale(0.85); 
+    filter: brightness(0.6) saturate(0.6);
+    box-shadow: 
+      0 0 6px rgba(180, 60, 60, 0.5),
+      inset 0 0 4px rgba(160, 80, 80, 0.3);
+  } 
+  100% {
+    transform: rotate(45deg) scale(0.9); 
+    filter: brightness(0.7) saturate(0.8);
+    box-shadow: 
+      0 0 6px rgba(200, 80, 80, 0.5),
+      inset 0 0 4px rgba(180, 100, 100, 0.3);
+  } 
+}
+
+@keyframes heartHeal { 
+  0% {
+    transform: rotate(45deg) scale(0.7); 
+    filter: brightness(0.6) saturate(0.5);
+    box-shadow: 
+      0 0 4px rgba(180, 60, 60, 0.4),
+      inset 0 0 3px rgba(160, 80, 80, 0.3);
+  } 
+  18% {
+    transform: rotate(45deg) scale(1.4); 
+    filter: brightness(1.8) saturate(1.5) hue-rotate(120deg);
+    box-shadow: 
+      0 0 20px rgba(120, 255, 120, 0.9),
+      inset 0 0 12px rgba(180, 255, 180, 0.7);
+  } 
+  40% {
+    transform: rotate(45deg) scale(0.95); 
+    filter: brightness(1.2) hue-rotate(60deg);
+    box-shadow: 
+      0 0 12px rgba(200, 255, 140, 0.7),
+      inset 0 0 8px rgba(220, 255, 180, 0.5);
+  } 
+  65% {
+    transform: rotate(45deg) scale(1.15); 
+    filter: brightness(1.4) hue-rotate(30deg);
+    box-shadow: 
+      0 0 16px rgba(255, 200, 120, 0.8),
+      inset 0 0 10px rgba(255, 220, 160, 0.6);
+  } 
+  100% {
+    transform: rotate(45deg) scale(1); 
+    filter: brightness(1);
+    box-shadow: 
+      0 0 8px rgba(255, 80, 80, 0.6),
+      inset 0 0 6px rgba(255, 140, 140, 0.4);
+  } 
+}
+
+/* Revive item badge - adjust for new layout */
+.revive-item-badge {
+  position:absolute;
+  top:45%; /* Match hearts container positioning */
+  right:6px;
+  transform:translateY(-50%);
+  width:32px;
+  height:32px;
+  background:linear-gradient(135deg,#fff5da,#ffe8a2 45%,#ffc043 75%,#b57300 100%);
+  border:2px solid #ffdd82;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 10px 3px rgba(255,210,90,0.55),0 0 22px 8px rgba(255,190,60,0.25), inset 0 0 8px #fff2c0, inset 0 0 14px #ffcf55;
+  z-index:9;
+  pointer-events:none;
+  font-weight:900;
+  font-size:0.95rem;
+  letter-spacing:0.05em;
+  color:#a02222;
+  text-shadow:0 0 4px #ffe9b0,0 0 8px #ffcf55;
+  overflow:visible;
+  margin-top: 15px; /* Match hearts container offset */
+}
+
+.revive-item-badge::before { /* gold aura */
+  content:""; position:absolute; inset:-6px; border-radius:12px; 
+  background:radial-gradient(circle at 50% 50%, rgba(255,230,140,0.75), rgba(255,190,60,0) 70%);
+  filter:blur(4px); opacity:.85; animation:reviveAura 3.4s ease-in-out infinite; 
+  mix-blend-mode:screen; z-index:-1;
+}
+
+.revive-item-badge::after { /* subtle rotating shine */
+  content:""; position:absolute; inset:0; border-radius:8px; 
+  background:linear-gradient(125deg, rgba(255,255,255,0.55), rgba(255,255,255,0) 40%); 
+  mix-blend-mode:overlay; animation:reviveShine 5.5s linear infinite;
+}
+
+.revive-item-badge .revive-core { /* red cross */
+  position:relative; width:60%; height:60%;
+}
+
+.revive-item-badge .revive-core::before,
+.revive-item-badge .revive-core::after {
+  content:""; position:absolute; left:50%; top:50%; 
+  background:linear-gradient(180deg,#ff4d4d,#c80000); 
+  border-radius:2px; transform:translate(-50%,-50%);
+}
+
+.revive-item-badge .revive-core::before { width:70%; height:24%; }
+.revive-item-badge .revive-core::after { width:24%; height:70%; }
+
+@keyframes reviveAura { 
+  0%,100%{ transform:scale(.9); opacity:.7;} 
+  50%{ transform:scale(1.15); opacity:1;} 
+}
+
+@keyframes reviveShine { to { transform:rotate(360deg); } }
+
+/* Respawn cooldown badge */
+.respawn-badge { 
+  position:absolute; top:6px; left:6px; width:28px; height:28px; 
+  background:linear-gradient(135deg,#2d3e6a,#182237); 
+  border:2px solid #5f7cff; color:#c9d6ff; 
+  font-weight:800; font-size:.85rem; 
+  display:flex; align-items:center; justify-content:center; 
+  border-radius:50%; 
+  box-shadow:0 0 10px #3e58aa, inset 0 0 12px #2a3a65; 
+  animation:respawnPulse 1.4s ease-in-out infinite; 
+}
+
+@keyframes respawnPulse { 
+  0%,100%{filter:brightness(1);} 
+  50%{filter:brightness(1.4);} 
+}
+
+/* Player hit shake */
+.player-card.shake-hit { 
+  animation:hitShake 480ms cubic-bezier(.36,.07,.19,.97); 
+}
+
+@keyframes hitShake { 
+  0%,100%{transform:translate3d(0,0,0);} 
+  10%{transform:translate3d(-6px,-3px,0);} 
+  20%{transform:translate3d(7px,2px,0);} 
+  30%{transform:translate3d(-8px,1px,0);} 
+  40%{transform:translate3d(6px,-2px,0);} 
+  50%{transform:translate3d(-4px,3px,0);} 
+  60%{transform:translate3d(3px,-1px,0);} 
+  70%{transform:translate3d(-2px,2px,0);} 
+  80%{transform:translate3d(2px,-1px,0);} 
+  90%{transform:translate3d(-1px,1px,0);} 
+}
+
+/* Player card glow effects */
+.player-card.glow-yellow {
+  box-shadow:
+    0 0 18px 4px #ffdf4d,
+    inset 0 0 14px 3px #ffe680;
+  transition: box-shadow 0.6s ease;
+}
+
+.player-card.glow-red {
+  box-shadow:
+    0 0 22px 4px #ff5555,
+    inset 0 0 14px 3px #ff9999;
+  transition: box-shadow 0.6s ease;
+}
+
+/* Death explosion */
+.player-card.dying { 
+  position:relative; 
+  animation:playerDie 900ms cubic-bezier(.25,.7,.2,1) forwards; 
+}
+
+.player-card.dying::after { 
+  content:''; position:absolute; inset:-4px; 
+  background:
+    radial-gradient(circle at 50% 55%, rgba(255,220,160,0.9), rgba(255,80,0,0.6) 40%, rgba(80,0,0,0.4) 60%, rgba(0,0,0,0) 72%),
+    repeating-conic-gradient(from 0deg, rgba(255,140,40,0.6) 0deg 10deg, rgba(255,140,40,0) 10deg 20deg);
+  mix-blend-mode:screen; opacity:0; 
+  animation:playerDieFlash 900ms cubic-bezier(.25,.7,.2,1) forwards; 
+  pointer-events:none; 
+}
+
+@keyframes playerDie { 
+  0%{transform:scale(1); filter:brightness(1);} 
+  25%{transform:scale(1.08) rotate(3deg); filter:brightness(1.4);} 
+  50%{transform:scale(0.85) rotate(-8deg); filter:brightness(0.8) grayscale(.3);} 
+  70%{transform:scale(0.95) rotate(4deg); opacity:1;} 
+  100%{transform:scale(0.6) rotate(-14deg); opacity:0; filter:brightness(0.3) grayscale(1);} 
+}
+
+@keyframes playerDieFlash { 
+  0%{opacity:0;} 
+  15%{opacity:1;} 
+  55%{opacity:.7;} 
+  100%{opacity:0;} 
+}
+
+/* Heavenly Holy Paladin Invincibility Effect */
+.player-card.player-invincible {
+  position: relative;
+  /* White border glow around player card */
+  box-shadow: 
+    0 0 8px 2px rgba(255, 255, 255, 0.9),
+    0 0 16px 4px rgba(255, 255, 255, 0.6),
+    0 0 24px 6px rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  animation: holyPaladinPulse 2s ease-in-out infinite;
+}
+
+@keyframes holyPaladinPulse {
+  0% { 
+    box-shadow: 
+      0 0 8px 2px rgba(255, 255, 255, 0.9),
+      0 0 16px 4px rgba(255, 255, 255, 0.6),
+      0 0 24px 6px rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+  50% { 
+    box-shadow: 
+      0 0 12px 3px rgba(255, 255, 255, 1),
+      0 0 24px 6px rgba(255, 255, 255, 0.8),
+      0 0 36px 9px rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 1);
+  }
+  100% { 
+    box-shadow: 
+      0 0 8px 2px rgba(255, 255, 255, 0.9),
+      0 0 16px 4px rgba(255, 255, 255, 0.6),
+      0 0 24px 6px rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+/* Player portrait glow effect */
+.player-card.player-invincible .player-avatar {
+  position: relative;
+  animation: portraitHolyGlow 3s ease-in-out infinite;
+  z-index: 2 !important; /* Ensure avatar is above sparkles */
+}
+
+@keyframes portraitHolyGlow {
+  0% { 
+    filter: brightness(1.2) drop-shadow(0 0 6px rgba(255, 255, 255, 0.8)) saturate(1.1);
+  }
+  50% { 
+    filter: brightness(1.5) drop-shadow(0 0 12px rgba(255, 255, 255, 1)) saturate(1.3);
+  }
+  100% { 
+    filter: brightness(1.2) drop-shadow(0 0 6px rgba(255, 255, 255, 0.8)) saturate(1.1);
+  }
+}
+
+/* Angelic floating sparkles - only on player portrait */
+.player-card.player-invincible::after {
+  content: '';
+  position: absolute;
+  top: 40px; /* Match avatar top position */
+  left: 0;
+  right: 0;
+  bottom: 70px; /* Match avatar area */
+  pointer-events: none;
+  z-index: 3; /* Above avatar */
+  background-image: 
+    /* Multiple sparkles at different positions with staggered animations */
+    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.9) 1.5px, transparent 2.5px),
+    radial-gradient(circle at 75% 85%, rgba(255, 255, 255, 0.8) 1px, transparent 2px),
+    radial-gradient(circle at 35% 75%, rgba(255, 255, 255, 0.7) 1.5px, transparent 2.5px),
+    radial-gradient(circle at 65% 90%, rgba(255, 255, 255, 0.9) 1px, transparent 2px),
+    radial-gradient(circle at 15% 70%, rgba(255, 255, 255, 0.6) 1.5px, transparent 2.5px),
+    radial-gradient(circle at 85% 75%, rgba(255, 255, 255, 0.8) 1px, transparent 2px);
+  background-size: 100% 100%;
+  animation: angelicSparkles1 3s ease-out infinite;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  filter: blur(0.3px);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+/* Additional sparkle layer with different timing */
+.player-card.player-invincible::before {
+  content: '';
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  bottom: 70px;
+  pointer-events: none;
+  z-index: 4; /* Above first sparkle layer */
+  background-image: 
+    radial-gradient(circle at 45% 85%, rgba(255, 255, 255, 0.8) 1px, transparent 2px),
+    radial-gradient(circle at 25% 90%, rgba(255, 255, 255, 0.9) 1.5px, transparent 2.5px),
+    radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.7) 1px, transparent 2px),
+    radial-gradient(circle at 55% 75%, rgba(255, 255, 255, 0.6) 1.5px, transparent 2.5px),
+    radial-gradient(circle at 90% 85%, rgba(255, 255, 255, 0.8) 1px, transparent 2px);
+  background-size: 100% 100%;
+  animation: angelicSparkles2 3.5s ease-out infinite 1.2s; /* Offset timing */
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  filter: blur(0.2px);
+}
+
+/* Floating upward sparkle animations */
+@keyframes angelicSparkles1 {
+  0% { 
+    opacity: 0;
+    transform: translateY(0px);
+    filter: blur(0.5px) brightness(0.8);
+  }
+  15% { 
+    opacity: 0.8;
+    transform: translateY(-10px);
+    filter: blur(0.3px) brightness(1.2);
+  }
+  50% { 
+    opacity: 1;
+    transform: translateY(-35px);
+    filter: blur(0.2px) brightness(1.5);
+  }
+  85% { 
+    opacity: 0.6;
+    transform: translateY(-65px);
+    filter: blur(0.4px) brightness(1.1);
+  }
+  100% { 
+    opacity: 0;
+    transform: translateY(-85px);
+    filter: blur(0.6px) brightness(0.8);
+  }
+}
+
+@keyframes angelicSparkles2 {
+  0% { 
+    opacity: 0;
+    transform: translateY(5px);
+    filter: blur(0.4px) brightness(0.9);
+  }
+  20% { 
+    opacity: 0.9;
+    transform: translateY(-8px);
+    filter: blur(0.2px) brightness(1.3);
+  }
+  55% { 
+    opacity: 1;
+    transform: translateY(-40px);
+    filter: blur(0.1px) brightness(1.6);
+  }
+  80% { 
+    opacity: 0.5;
+    transform: translateY(-70px);
+    filter: blur(0.5px) brightness(1);
+  }
+  100% { 
+    opacity: 0;
+    transform: translateY(-90px);
+    filter: blur(0.7px) brightness(0.7);
+  }
+}

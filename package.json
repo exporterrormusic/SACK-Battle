@@ -1,0 +1,70 @@
+{
+  "name": "twitch-nikke-boss",
+  "version": "1.0.0",
+  "description": "Twitch interactive boss battle game for Goddess of Victory: Nikke stream",
+  "main": "main.js",
+  "author": "SACK BATTLE Developer",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"electron .\" \"npm run extension-server\"",
+    "dev-all": "concurrently \"npm run backend-dev\" \"npm run extension-server\" \"electron .\"",
+    "dev-vercel": "concurrently \"npm run extension-server\" \"electron .\"",
+    "extension-server": "cd twitch-extension/frontend && python -m http.server 8080",
+    "backend-dev": "cd twitch-extension/backend && npm start",
+    "backend-only": "cd twitch-extension/backend && npm start",
+    "frontend-only": "cd twitch-extension/frontend && python -m http.server 8080",
+    "build": "electron-builder",
+    "build-portable": "electron-builder --win portable",
+    "build-installer": "electron-builder --win nsis",
+    "build-all": "electron-builder --win"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "electron": "^29.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.sackbattle.app",
+    "productName": "SACK BATTLE",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "src/**/*",
+      "index.html",
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "!src/assets-original/**/*",
+      "!**/*.psd"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        },
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "portable": {
+      "artifactName": "SACK-BATTLE-Portable-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "SACK-BATTLE-Setup-${version}.exe",
+      "shortcutName": "SACK BATTLE"
+    }
+  }
+}

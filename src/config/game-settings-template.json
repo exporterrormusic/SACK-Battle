@@ -1,0 +1,55 @@
+{
+  "bossHp": 100,
+  "turnLength": 30,
+  "maxTurns": 6,
+  "bossProbabilities": {
+    "growl": 0.15,
+    "attack": 0.45,
+    "cover": 0.15,
+    "charge": 0.25
+  },
+  "twitchClientId": "",
+  "twitchClientSecret": "",
+  "twitchBotUsername": "",
+  "twitchOauthToken": "",
+  "twitchChannel": "",
+  "twitchTokenScopes": [],
+  "twitchTokenExpiresAt": 0,
+  "youtubeApiKey": "",
+  "youtubeChannelId": "",
+  "battlefieldImage": "",
+  "bossImage": "",
+  "bossName": "",
+  "rankDefinitions": [
+    { "name": "Rookie", "wins": 0 },
+    { "name": "Commander", "wins": 10 },
+    { "name": "Deputy Chief", "wins": 125 },
+    { "name": "Legendary", "wins": 100 }
+  ],
+  "channelPointTriggers": [
+    { "key": "chooseavatar", "match": "AvatarSwitch", "enabled": true }
+  ],
+  "bitsThresholds": [
+    { "minBits": 100, "key": "powerfulattack", "enabled": true }
+  ],
+  "chatCommands": {
+    "attack": "!attack",
+    "cover": "!cover",
+    "heal": "!heal",
+    "youtube": {
+      "attack": "!attack",
+      "cover": "!cover", 
+      "heal": "!heal",
+      "aggressive": "!strike",
+      "burst": "!burst",
+      "avatar": "!avatar"
+    }
+  },
+  "rules": "Attack the boss, cover to block damage, heal to regain hearts. Use chat commands: !attack !cover !heal.",
+  "respawnMode": "cooldown",
+  "powerfulAttackDamage": 30,
+  "waitingBackgroundImage": "",
+  "waitingMainLogoImage": "",
+  "waitingSecondaryLogoImage": "",
+  "bossPlaylist": []
+}

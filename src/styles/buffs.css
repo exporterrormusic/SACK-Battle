@@ -1,0 +1,425 @@
+/* Buff system styling: Buff bar, icons, animations, and timers */
+
+/* Buff bar container - enhanced specificity for modular CSS */
+#buff-bar {
+  position: absolute !important;
+  top: 50% !important;
+  left: 24px !important;
+  transform: translateY(-50%) !important;
+  display: flex !important;
+  gap: 14px !important;
+  max-height: 90px !important;
+  align-items: center !important;
+  padding: 6px 14px 10px !important;
+  background: linear-gradient(135deg, rgba(40,52,90,0.72), rgba(30,38,66,0.78)) !important;
+  border: 1px solid rgba(150,190,255,0.35) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.55), inset 0 0 10px rgba(170,205,255,0.35) !important;
+  backdrop-filter: blur(10px) saturate(1.25) !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  z-index: 100 !important;
+}
+
+/* Buff bar label styling */
+.buff-bar-label {
+  font-size: 1rem !important; /* base for first line (will override via span:first-child) */
+  font-weight: 700 !important;
+  letter-spacing: 0.18em !important;
+  color: #ffe066 !important;
+  text-shadow: 0 0 8px #7d5a00, 0 0 18px #fff3b0 !important;
+  margin-bottom: 2px !important;
+  text-align: center !important;
+  padding-left: 0 !important;
+  user-select: none !important;
+  line-height: 1 !important; /* tighten */
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important; /* minimal vertical space */
+}
+
+.buff-bar-label br { 
+  display: none !important; 
+}
+
+.buff-bar-label span:first-child { 
+  font-size: 1.08rem !important; 
+  letter-spacing: 0.22em !important; 
+}
+
+.buff-bar-label span:last-child {
+  display: inline-block !important;
+  font-size: 1.32rem !important; /* slightly larger */
+  letter-spacing: 0.50em !important;
+  transform: none !important;
+}
+
+#buff-bar:empty {
+  display: none;
+}
+
+/* Individual buff icons - enhanced for proper display */
+.buff-icon {
+  position: relative !important;
+  width: 72px !important;
+  height: 72px !important;
+  flex: 0 0 72px !important;
+  border-radius: 18px !important;
+  background: radial-gradient(circle at 40% 35%, #ffffff, #ebe6cf 55%, #d2b45a 70%, #7d5e22 95%) !important;
+  box-shadow: 0 0 14px #f1dc84, 0 0 30px rgba(255,229,140,0.55), inset 0 0 12px rgba(255,255,255,0.65) !important;
+  overflow: hidden !important;
+  animation: buffIconPulse 4s ease-in-out infinite !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(4px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer !important;
+}
+
+.buff-icon img {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  pointer-events: none !important;
+  filter: drop-shadow(0 0 8px rgba(255,255,220,0.55)) !important;
+  z-index: 1 !important;
+}
+
+.buff-icon:hover {
+  transform: scale(1.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.3);
+}
+
+/* Buff icon states */
+.buff-icon.positive {
+  border-color: rgba(46, 204, 113, 0.6);
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(39, 174, 96, 0.3));
+  color: #2ecc71;
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
+}
+
+.buff-icon.negative {
+  border-color: rgba(231, 76, 60, 0.6);
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.3));
+  color: #e74c3c;
+  box-shadow: 0 0 8px rgba(231, 76, 60, 0.3);
+}
+
+.buff-icon.neutral {
+  border-color: rgba(74, 144, 226, 0.6);
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.2), rgba(53, 122, 189, 0.3));
+  color: #4a90e2;
+  box-shadow: 0 0 8px rgba(74, 144, 226, 0.3);
+}
+
+/* Buff duration indicator */
+.buff-duration {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0 0 6px 6px;
+  transition: width 0.1s linear;
+}
+
+.buff-icon.positive .buff-duration {
+  background: linear-gradient(90deg, #2ecc71, #27ae60);
+}
+
+.buff-icon.negative .buff-duration {
+  background: linear-gradient(90deg, #e74c3c, #c0392b);
+}
+
+.buff-icon.neutral .buff-duration {
+  background: linear-gradient(90deg, #4a90e2, #357abd);
+}
+
+/* Enhanced buff timer badge with data attribute support */
+.buff-icon[data-rem]:not([data-rem='-'])::after {
+  content: attr(data-rem) !important;
+  position: absolute !important;
+  bottom: 4px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: linear-gradient(135deg,rgba(30,32,40,0.92),rgba(60,54,32,0.82)) !important;
+  padding: 2px 14px 3px !important;
+  border-radius: 14px !important;
+  border: 2px solid #ffe9a8 !important;
+  font-size: 1.05rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.13em !important;
+  color: #ffe9a8 !important;
+  text-shadow: 0 1px 6px #000, 0 0 10px #e8b84c !important;
+  line-height: 1.1 !important;
+  min-width: 28px !important;
+  text-align: center !important;
+  box-shadow: 0 2px 10px rgba(255,220,120,0.25), 0 0 10px rgba(255,190,80,0.18) inset !important;
+  animation: counterBadgePulse 3.4s ease-in-out infinite !important;
+  pointer-events: none !important;
+  z-index: 4 !important;
+}
+
+.buff-icon[data-rem='1']::after {
+  color: #ffb894 !important;
+  border-color: #ffb894 !important;
+  animation: counterUrgent 1s ease-in-out infinite !important;
+}
+
+@keyframes counterBadgePulse { 
+  0%,100%{transform:translateX(-50%) scale(1);} 
+  50%{transform:translateX(-50%) scale(1.08);} 
+}
+
+@keyframes counterUrgent { 
+  0%,100%{transform:translateX(-50%) scale(1); filter:brightness(1);} 
+  50%{transform:translateX(-50%) scale(1.18); filter:brightness(1.4);} 
+}
+
+@keyframes buffIconPulse { 
+  0%,100%{ transform:scale(1); } 
+  50%{ transform:scale(1.04); } 
+}
+
+/* Buff stacks indicator */
+.buff-stacks {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  background: rgba(255, 215, 0, 0.9);
+  color: #000;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 4px;
+  min-width: 16px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Buff tooltips */
+.buff-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 25, 35, 0.95);
+  backdrop-filter: blur(8px);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(-8px);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.buff-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(20, 25, 35, 0.95);
+}
+
+.buff-icon:hover .buff-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Buff expiration warning */
+.buff-icon.expiring {
+  animation: buffExpiring 1s ease-in-out infinite;
+}
+
+@keyframes buffExpiring {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+/* Buff application animation */
+.buff-icon.buff-applied {
+  animation: buffApplied 0.5s ease-out;
+}
+
+@keyframes buffApplied {
+  0% {
+    transform: scale(0) rotate(180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(90deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Buff removal animation */
+.buff-icon.buff-removed {
+  animation: buffRemoved 0.3s ease-in forwards;
+}
+
+@keyframes buffRemoved {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+}
+
+/* Specific buff type styling */
+.buff-icon[data-buff="attack-up"] {
+  background-image: linear-gradient(135deg, rgba(255, 140, 0, 0.3), rgba(255, 69, 0, 0.3));
+}
+
+.buff-icon[data-buff="defense-up"] {
+  background-image: linear-gradient(135deg, rgba(65, 105, 225, 0.3), rgba(30, 144, 255, 0.3));
+}
+
+.buff-icon[data-buff="speed-up"] {
+  background-image: linear-gradient(135deg, rgba(50, 205, 50, 0.3), rgba(34, 139, 34, 0.3));
+}
+
+.buff-icon[data-buff="regeneration"] {
+  background-image: linear-gradient(135deg, rgba(144, 238, 144, 0.3), rgba(102, 205, 170, 0.3));
+}
+
+.buff-icon[data-buff="poison"] {
+  background-image: linear-gradient(135deg, rgba(128, 0, 128, 0.3), rgba(75, 0, 130, 0.3));
+}
+
+.buff-icon[data-buff="burn"] {
+  background-image: linear-gradient(135deg, rgba(255, 69, 0, 0.3), rgba(220, 20, 60, 0.3));
+}
+
+.buff-icon[data-buff="freeze"] {
+  background-image: linear-gradient(135deg, rgba(173, 216, 230, 0.3), rgba(135, 206, 250, 0.3));
+}
+
+.buff-icon[data-buff="stun"] {
+  background-image: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
+}
+
+/* Buff intensity levels */
+.buff-icon.intensity-1 {
+  filter: brightness(0.8);
+}
+
+.buff-icon.intensity-2 {
+  filter: brightness(1.0);
+}
+
+.buff-icon.intensity-3 {
+  filter: brightness(1.2) saturate(1.1);
+}
+
+.buff-icon.intensity-4 {
+  filter: brightness(1.4) saturate(1.2);
+  animation: buffPulse 2s ease-in-out infinite;
+}
+
+.buff-icon.intensity-5 {
+  filter: brightness(1.6) saturate(1.3);
+  animation: buffPulse 1s ease-in-out infinite;
+}
+
+@keyframes buffPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 16px currentColor, 0 0 24px currentColor;
+  }
+}
+
+/* Responsive design for buff bar */
+@media (max-width: 768px) {
+  #buff-bar {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    transform: none;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .buff-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+/* WAAPI-driven burst nodes */
+.buff-anim .buff-burst { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: contain; 
+}
+
+/* Buff summary display */
+.buff-summary {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  max-width: 200px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 99;
+}
+
+.buff-summary h4 {
+  margin: 0 0 8px 0;
+  color: #4a90e2;
+  font-size: 14px;
+}
+
+.buff-summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.buff-summary-name {
+  color: #ccc;
+}
+
+.buff-summary-value {
+  color: white;
+  font-weight: bold;
+}

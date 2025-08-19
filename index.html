@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Boss Battle Game</title>
+  <!-- Modular CSS imports -->
+  <link rel="stylesheet" href="src/styles/base.css" />
+  <link rel="stylesheet" href="src/styles/layout.css" />
+  <link rel="stylesheet" href="src/styles/ui-components.css" />
+  <link rel="stylesheet" href="src/styles/players.css" />
+  <link rel="stylesheet" href="src/styles/boss.css" />
+  <link rel="stylesheet" href="src/styles/buffs.css" />
+  <link rel="stylesheet" href="src/styles/effects.css" />
+  <link rel="stylesheet" href="src/styles/scoreboard.css" />
+  <link rel="stylesheet" href="src/styles/welcome.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- Header with round/match info -->
+    <header id="game-header">
+      <h1>S.A.C.K. BATTLE ARENA</h1>
+      <div id="round-info">
+        <div id="round-display-container">Round: <span id="round-display">0</span> / <span id="max-rounds">0</span></div>
+        <div id="match-display-container">Matches: <span id="match-display">0</span></div>
+      </div>
+      <div id="buff-bar" aria-label="Active Buffs">
+  <div class="buff-bar-label"><span>ACTIVATED</span><br><span>BUFFS</span></div>
+      </div>
+    </header>
+
+    <!-- Main container -->
+    <div id="main-container">
+
+      <!-- Players & bots area (left) -->
+      <section id="players-container"></section>
+
+      <!-- Boss area (right) -->
+      <section id="boss-container">
+        <div id="boss-image-wrapper">
+          <!-- Use updated pre-battle placeholder image -->
+          <img id="boss-image" src="app://assets/ui/default-start.png" alt="Boss" />
+          <div id="boss-overlay">
+            <div class="boss-hp-bar-container">
+              <div class="boss-hp-bar-bg">
+                <div class="boss-hp-bar-fill" id="boss-hp-bar-fill" style="width:100%"></div>
+              </div>
+              <div class="boss-hp-text-line">HP: <span id="boss-hp">100</span></div>
+            </div>
+            <h2 id="boss-name">Boss Name</h2>
+            <p id="boss-status-text"></p>
+            <div id="boss-info-row">
+              <div id="boss-last-move" class="boss-last-attack-block">
+                <span class="label">LAST ATTACK:</span>
+                <span class="value" id="boss-last-move-value">-</span>
+              </div>
+              <div id="boss-timer" class="boss-timer-block">
+                <span class="label">TIMER</span>
+                <span class="value"><span id="countdown-timer">--</span>s</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Battlefield background (absolute, covers whole main) -->
+      <div id="battlefield-container">
+  <img id="battlefield-bg" src="app://assets/battlefield/battlefield1.jpg" alt="Battlefield background" />
+      </div>
+
+  <!-- Welcome Screen (initial overlay) -->
+  <div id="welcome-screen" class="waiting-hidden">
+        <div class="waiting-bg"></div>
+        <div class="waiting-logo main"></div>
+        <div class="waiting-logo secondary"></div>
+      </div>
+
+    </div>
+
+    <!-- Scoreboard overlay -->
+    <div id="scoreboard-mode" class="scoreboard-mode">
+      <div class="scoreboard-header">
+        <h1 class="scoreboard-title">Match Results</h1>
+        <p class="scoreboard-subtitle">Player Statistics</p>
+      </div>
+      <div class="scoreboard-grid" id="scoreboard-grid">
+        <!-- Player scoreboard cards will be dynamically populated here -->
+      </div>
+      <div class="scoreboard-controls">
+        <button class="scoreboard-btn" id="scoreboard-close">Close</button>
+      </div>
+    </div>
+
+    <!-- Dev bar -->
+    <div id="dev-bar">
+  <div id="connection-status" style="display:none"></div>
+      <div class="dev-section">
+        <button id="btn-spawn-bot">Spawn Bot</button>
+        <select id="bot-behavior-select" title="Select Bot Behavior">
+          <option value="random">Random</option>
+          <option value="attack">Attack</option>
+          <option value="defend">Defend</option>
+          <option value="heal">Heal</option>
+          <option value="aggressive">Strike</option>
+        </select>
+      </div>
+
+      <div class="dev-divider"></div>
+
+      <!-- Buff test (moved here between spawn bot and boss attack) -->
+      <div class="dev-section" id="dev-buff-test">
+        <select id="dev-buff-select" title="Select Buff To Test">
+          <option value="powerfulattack">Powerful Attack</option>
+          <option value="massheal">Mass Heal</option>
+          <option value="reviveall">Revive All</option>
+          <option value="attackup">Attack Up</option>
+        </select>
+        <button id="btn-test-buff" title="Apply Selected Buff">Test Buff</button>
+      </div>
+
+      <div class="dev-divider"></div>
+
+  <!-- Burst animation test removed -->
+
+      <div class="dev-divider"></div>
+
+      <div class="dev-section">
+        <select id="boss-attack-select" title="Select Boss Attack">
+          <option value="growl">Growl</option>
+          <option value="attack">Attack</option>
+          <option value="cover">Cover</option>
+          <option value="charge">Charge</option>
+        </select>
+        <button id="btn-set-boss-attack">Set Attack</button>
+      </div>
+
+      <div class="dev-divider"></div>
+
+      <div class="dev-section">
+        <button id="btn-force-turn">Force Next Turn</button>
+      </div>
+
+      <div class="dev-divider"></div>
+
+      <div class="dev-section">
+  <button id="btn-start-game" class="primary-red">Start Game</button>
+  <button id="btn-stop-game" class="secondary-reset">Reset</button>
+      </div>
+
+      <div class="dev-divider"></div>
+
+      <div class="dev-section">
+        <button id="btn-open-settings">Settings</button>
+      </div>
+
+      <div class="dev-divider"></div>
+
+      <div class="dev-section" style="min-width:160px;display:flex;flex-direction:column;gap:4px;">
+        <div id="health-status" style="font-size:0.55rem;line-height:1.3;opacity:0.8;">
+          <strong>Health:</strong>
+          <div>Chat: <span id="health-chat">?</span></div>
+          <div>EventSub: <span id="health-eventsub">?</span></div>
+          <div>Token: <span id="health-token">?</span></div>
+        </div>
+        <button id="btn-refresh-health" style="background:#3b4fa0;color:#fff;border:none;border-radius:4px;padding:4px 6px;font-size:0.55rem;cursor:pointer;">Refresh Health</button>
+      </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div id="settings-modal" class="hidden" aria-hidden="true">
+      <div id="settings-content">
+        <header>
+          <h2>Settings</h2>
+          <button id="settings-close" aria-label="Close settings">&times;</button>
+        </header>
+
+        <!-- Tabs -->
+        <nav id="settings-tabs">
+          <button data-tab="game" class="tab-btn active">Game</button>
+          <button data-tab="appearance" class="tab-btn">Boss</button>
+          <span class="tab-sep"></span>
+          <button data-tab="style" class="tab-btn">Style</button>
+          <button data-tab="audio" class="tab-btn">Audio</button>
+          <span class="tab-sep"></span>
+          <button data-tab="ranks" class="tab-btn">Ranks</button>
+          <button data-tab="records" class="tab-btn">Records</button>
+          <span class="tab-sep"></span>
+          <button data-tab="commands" class="tab-btn">Commands</button>
+          <span class="tab-sep"></span>
+          <button data-tab="twitch" class="tab-btn">Twitch</button>
+          <button data-tab="youtube" class="tab-btn">YouTube</button>
+          <button data-tab="discord" class="tab-btn">Discord</button>
+        </nav>
+
+        <!-- Tab panels -->
+  <section id="settings-game" class="settings-tab active">
+          <div class="game-settings-left">
+            <div class="setting-inline">
+              <label for="input-turn-length">Turn Length (s)</label>
+              <input type="number" id="input-turn-length" min="5" max="120" />
+            </div>
+            <div class="setting-inline">
+              <label for="input-max-turns">Max Turns</label>
+              <input type="number" id="input-max-turns" min="1" max="50" />
+            </div>
+            <div class="setting-inline">
+              <label for="input-max-matches">Max Matches</label>
+              <input type="number" id="input-max-matches" min="1" max="20" />
+            </div>
+            <div class="setting-inline">
+              <label for="input-respawn-mode">Respawns</label>
+              <select id="input-respawn-mode">
+                <option value="cooldown">3-Turn Cooldown</option>
+                <option value="matchend">After Match End</option>
+              </select>
+            </div>
+            <div class="setting-inline">
+              <label for="input-powerful-damage">Power Attack Dmg</label>
+              <input type="number" id="input-powerful-damage" min="1" max="999" />
+            </div>
+          </div>
+          
+          <div class="game-settings-right">
+            <div style="margin:0 0 10px;border-top:1px solid rgba(255,255,255,0.1);"></div>
+            <h3 style="margin:8px 0 12px;font-size:0.9rem;color:#e2e8f0;letter-spacing:0.05em;">Boss Move Probabilities</h3>
+            <p style="opacity:0.7;font-size:0.75rem;margin:0 0 16px 0;color:#a0aec0;">Control how often each boss move occurs. Total must equal 100%.</p>
+            
+            <div id="boss-probabilities-container">
+              <div class="prob-input-group">
+                <label for="input-prob-growl">Growl</label>
+                <div class="prob-input-wrapper">
+                  <input type="number" id="input-prob-growl" min="0" max="100" />
+                  <span class="prob-percent-symbol">%</span>
+                </div>
+              </div>
+              <div class="prob-input-group">
+                <label for="input-prob-attack">Attack</label>
+                <div class="prob-input-wrapper">
+                  <input type="number" id="input-prob-attack" min="0" max="100" />
+                  <span class="prob-percent-symbol">%</span>
+                </div>
+              </div>
+              <div class="prob-input-group">
+                <label for="input-prob-cover">Cover</label>
+                <div class="prob-input-wrapper">
+                  <input type="number" id="input-prob-cover" min="0" max="100" />
+                  <span class="prob-percent-symbol">%</span>
+                </div>
+              </div>
+              <div class="prob-input-group">
+                <label for="input-prob-charge">Charge</label>
+                <div class="prob-input-wrapper">
+                  <input type="number" id="input-prob-charge" min="0" max="100" />
+                  <span class="prob-percent-symbol">%</span>
+                </div>
+              </div>
+            </div>
+            
+            <div id="prob-total-display">
+              Total: <span id="prob-total-value">0</span>%
+            </div>
+            
+            <div class="prob-controls">
+              <button type="button" id="btn-save-default-probs" class="prob-control-btn save">Save Default</button>
+              <button type="button" id="btn-reset-default-probs" class="prob-control-btn reset">Reset to Default</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="settings-appearance" class="settings-tab">
+          <h3 style="margin:4px 0 6px;font-size:0.7rem;letter-spacing:.18em;opacity:.8;">Boss Playlist</h3>
+          <div class="boss-add-controls">
+            <select id="boss-manifest-select" style="flex:1;min-width:200px;padding-left:44px;background-size:32px 32px;background-repeat:no-repeat;background-position:6px center;"></select>
+            <input type="number" id="boss-add-hp" placeholder="HP" style="width:80px;" min="1" />
+            <input type="text" id="boss-add-sub" placeholder="Sub-name (opt)" style="flex:1;min-width:140px;" />
+            <button type="button" id="btn-add-boss">+ Add Boss</button>
+          </div>
+          <div id="boss-playlist" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;"></div>
+          <small style="display:block;opacity:.55;font-size:0.55rem;margin-top:6px;">Drag to reorder. First entry runs next match. Rotation auto-cycles used boss to end. Audio files: music/attack/charge/special/growl/defeat/victory/cooldown.*</small>
+        </section>
+
+        <section id="settings-ranks" class="settings-tab">
+          <div id="rank-list" style="max-height:240px; overflow:auto; padding:6px;"></div>
+        </section>
+
+        <section id="settings-records" class="settings-tab">
+          <p style="margin:0 0 8px 0;font-size:0.8rem;opacity:0.75;">Manage player records (victories) without spawning avatars. Adding or editing here affects rank progression.</p>
+          <div class="records-controls">
+            <input type="text" id="record-username" placeholder="twitch username" style="flex:1;min-width:140px;" />
+            <input type="number" id="record-score" placeholder="wins" min="0" style="width:100px;" />
+            <button type="button" id="record-set-btn">Set / Create</button>
+            <button type="button" id="record-reset-btn" style="background:linear-gradient(135deg, #e74c3c, #c0392b) !important;">Reset All</button>
+          </div>
+          <div id="records-table" style="max-height:220px; overflow:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.78rem;">
+              <thead style="position:sticky;top:0;">
+                <tr>
+                  <th style="text-align:left;padding:4px 6px;">Player</th>
+                  <th style="text-align:right;padding:4px 6px;">Wins</th>
+                  <th style="text-align:center;padding:4px 6px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="records-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="settings-commands" class="settings-tab">
+          <div class="commands-container">
+            <!-- Left Side: Basic Commands with Sub-tabs -->
+            <div class="commands-left">
+              <h3 style="margin: 0 0 12px;font-size:0.9rem;color:#e2e8f0;">Basic Commands</h3>
+              
+              <!-- Basic Commands Sub-tabs -->
+              <div class="command-sub-tabs">
+                <button type="button" class="command-sub-tab active" data-platform="twitch">Twitch</button>
+                <button type="button" class="command-sub-tab" data-platform="youtube">YouTube</button>
+                <button type="button" class="command-sub-tab" data-platform="discord">Discord</button>
+              </div>
+              
+              <!-- Twitch Basic Commands -->
+              <div id="twitch-commands" class="command-platform-content active">
+                <div class="cmd-row"><label for="cmd-attack-twitch">Attack</label><input type="text" id="cmd-attack-twitch" placeholder="!attack" /></div>
+                <div class="cmd-row"><label for="cmd-cover-twitch">Cover</label><input type="text" id="cmd-cover-twitch" placeholder="!cover" /></div>
+                <div class="cmd-row"><label for="cmd-heal-twitch">Heal</label><input type="text" id="cmd-heal-twitch" placeholder="!heal" /></div>
+                <div class="cmd-row"><label for="cmd-aggressive-twitch">Strike</label><input type="text" id="cmd-aggressive-twitch" placeholder="!strike" /></div>
+                <div class="cmd-row"><label for="cmd-burst-twitch">Burst</label><input type="text" id="cmd-burst-twitch" placeholder="!burst" /></div>
+                <div class="cmd-row"><label for="cmd-avatar-twitch">Avatar</label><input type="text" id="cmd-avatar-twitch" placeholder="!avatar" /></div>
+              </div>
+              
+              <!-- YouTube Basic Commands -->
+              <div id="youtube-commands" class="command-platform-content">
+                <div class="cmd-row"><label for="cmd-attack-youtube">Attack</label><input type="text" id="cmd-attack-youtube" placeholder="!attack or ⚔️" /></div>
+                <div class="cmd-row"><label for="cmd-cover-youtube">Cover</label><input type="text" id="cmd-cover-youtube" placeholder="!cover or 🛡️" /></div>
+                <div class="cmd-row"><label for="cmd-heal-youtube">Heal</label><input type="text" id="cmd-heal-youtube" placeholder="!heal or ❤️" /></div>
+                <div class="cmd-row"><label for="cmd-aggressive-youtube">Strike</label><input type="text" id="cmd-aggressive-youtube" placeholder="!aggressive or 💥" /></div>
+                <div class="cmd-row"><label for="cmd-burst-youtube">Burst</label><input type="text" id="cmd-burst-youtube" placeholder="!burst or ⭐" /></div>
+                <div class="cmd-row"><label for="cmd-avatar-youtube">Avatar</label><input type="text" id="cmd-avatar-youtube" placeholder="!avatar" /></div>
+              </div>
+              
+              <!-- Discord Basic Commands -->
+              <div id="discord-commands" class="command-platform-content">
+                <div class="cmd-row"><label for="cmd-attack-discord">Attack</label><input type="text" id="cmd-attack-discord" placeholder="!attack" /></div>
+                <div class="cmd-row"><label for="cmd-cover-discord">Cover</label><input type="text" id="cmd-cover-discord" placeholder="!cover" /></div>
+                <div class="cmd-row"><label for="cmd-heal-discord">Heal</label><input type="text" id="cmd-heal-discord" placeholder="!heal" /></div>
+                <div class="cmd-row"><label for="cmd-aggressive-discord">Strike</label><input type="text" id="cmd-aggressive-discord" placeholder="!strike" /></div>
+                <div class="cmd-row"><label for="cmd-burst-discord">Burst</label><input type="text" id="cmd-burst-discord" placeholder="!burst" /></div>
+                <div class="cmd-row"><label for="cmd-avatar-discord">Avatar</label><input type="text" id="cmd-avatar-discord" placeholder="!avatar" /></div>
+              </div>
+            </div>
+            
+            <!-- Right Side: Trigger Events with Sub-tabs -->
+            <div class="commands-right">
+              <h3 style="margin: 0 0 12px;font-size:0.9rem;color:#e2e8f0;">Trigger Events</h3>
+              
+              <!-- Trigger Events Sub-tabs -->
+              <div class="trigger-sub-tabs">
+                <button type="button" class="trigger-sub-tab active" data-trigger="rewards">Rewards</button>
+                <button type="button" class="trigger-sub-tab" data-trigger="bits">Bits</button>
+                <button type="button" class="trigger-sub-tab" data-trigger="superchats">SuperChats</button>
+              </div>
+              
+              <!-- Channel Point Rewards -->
+              <div id="rewards-triggers" class="trigger-content active">
+                <p style="opacity:0.7;font-size:0.7rem;margin:0 0 12px;">Twitch channel point reward triggers</p>
+                <div id="rewards-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+                <div class="add-trigger-row">
+                  <input type="text" id="new-reward-match" placeholder="Reward title fragment" />
+                  <select id="new-reward-effect">
+                    <option value="massheal">Mass Heal + Invuln</option>
+                    <option value="powerfulattack">Powerful Attack</option>
+                    <option value="attackup">Attack Up (x5 dmg 5 turns)</option>
+                    <option value="reviveall">Revive All</option>
+                    <option value="chooseavatar">Choose Avatar</option>
+                  </select>
+                  <button type="button" id="btn-add-reward" class="add-trigger-btn">Add</button>
+                </div>
+              </div>
+              
+              <!-- Bits Thresholds -->
+              <div id="bits-triggers" class="trigger-content">
+                <p style="opacity:0.7;font-size:0.7rem;margin:0 0 12px;">Twitch bits amount triggers</p>
+                <div id="bits-thresholds-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+                <div class="add-trigger-row">
+                  <input type="number" id="new-bits-amount" placeholder="100" min="1" />
+                  <select id="new-bits-effect">
+                    <option value="massheal">Mass Heal + Invuln</option>
+                    <option value="powerfulattack">Powerful Attack</option>
+                    <option value="attackup">Attack Up (x5 dmg 5 turns)</option>
+                    <option value="reviveall">Revive All</option>
+                    <option value="chooseavatar">Choose Avatar</option>
+                  </select>
+                  <button type="button" id="btn-add-bits-threshold" class="add-trigger-btn">Add</button>
+                </div>
+              </div>
+              
+              <!-- YouTube SuperChats -->
+              <div id="superchats-triggers" class="trigger-content">
+                <p style="opacity:0.7;font-size:0.7rem;margin:0 0 12px;">YouTube Super Chat amount triggers</p>
+                <div id="superchats-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+                <div class="add-trigger-row">
+                  <input type="number" id="new-superchat-amount" placeholder="5.00" min="1" step="0.01" />
+                  <select id="new-superchat-effect">
+                    <option value="massheal">Mass Heal + Invuln</option>
+                    <option value="powerfulattack">Powerful Attack</option>
+                    <option value="attackup">Attack Up (x5 dmg 5 turns)</option>
+                    <option value="reviveall">Revive All</option>
+                    <option value="chooseavatar">Choose Avatar</option>
+                  </select>
+                  <button type="button" id="btn-add-superchat" class="add-trigger-btn">Add</button>
+                </div>
+              </div>
+              
+              <!-- Rules Section -->
+              <div style="margin:16px 0 8px;border-top:1px solid rgba(255,255,255,0.1);"></div>
+              <div class="rules-info-separator" style="margin: 8px 0;">Built-in command: <strong>!rules</strong> (2m cooldown)</div>
+              <div id="rules-collapsible" class="rules-collapsed">
+                <button type="button" id="rules-toggle" aria-expanded="false">Rules ▼</button>
+                <div id="rules-editor-wrapper">
+                  <textarea id="rules-text" rows="4" spellcheck="false"></textarea>
+                  <small style="opacity:0.6;display:block;margin-top:4px;">These rules respond to !rules in chat.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="settings-twitch" class="settings-tab">
+          <!-- Twitch Sub-tabs - Improved Design -->
+          <div class="twitch-sub-tabs">
+            <button type="button" class="twitch-sub-tab active" data-twitch-tab="chatbot">
+              <span class="tab-icon">💬</span>
+              <span class="tab-text">Chat Bot</span>
+            </button>
+            <button type="button" class="twitch-sub-tab" data-twitch-tab="extension">
+              <span class="tab-icon">🎮</span>
+              <span class="tab-text">Extension</span>
+            </button>
+          </div>
+
+          <!-- Chat Bot Tab Content -->
+          <div id="twitch-chatbot-content" class="twitch-tab-content active">
+            <div class="twitch-grid">
+              <!-- Connection Settings -->
+              <div class="settings-card">
+                <h4 class="card-title">🔌 Connection</h4>
+                <div class="form-group">
+                  <label for="twitch-bot-username">Bot Username</label>
+                  <input type="text" id="twitch-bot-username" placeholder="your_bot_username" />
+                </div>
+                <div class="form-group">
+                  <label for="twitch-channel">Channel Name</label>
+                  <input type="text" id="twitch-channel" placeholder="your_channel" />
+                </div>
+                <div class="form-group">
+                  <label for="twitch-oauth-token">OAuth Token</label>
+                  <div class="reveal-wrapper">
+                    <input type="password" id="twitch-oauth-token" placeholder="oauth:xxxxxxxxxxxxxxxx" />
+                    <button type="button" class="reveal-btn" data-target="twitch-oauth-token" aria-label="Reveal OAuth Token">👁</button>
+                  </div>
+                </div>
+                <div class="button-group">
+                  <button type="button" id="btn-connect-twitch" class="btn btn-success">Connect</button>
+                  <button type="button" id="btn-test-chat" class="btn btn-secondary">Test</button>
+                </div>
+              </div>
+
+              <!-- OAuth Generator -->
+              <div class="settings-card">
+                <h4 class="card-title">🔑 OAuth Generator</h4>
+                <div class="form-group">
+                  <label for="input-twitch-client-id">Client ID</label>
+                  <div class="reveal-wrapper">
+                    <input type="password" id="input-twitch-client-id" placeholder="Enter Twitch Client ID" />
+                    <button type="button" class="reveal-btn" data-target="input-twitch-client-id" aria-label="Reveal Client ID">👁</button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="input-twitch-client-secret">Client Secret <span class="optional">(optional)</span></label>
+                  <div class="reveal-wrapper">
+                    <input type="password" id="input-twitch-client-secret" placeholder="Enter Twitch Client Secret" />
+                    <button type="button" class="reveal-btn" data-target="input-twitch-client-secret" aria-label="Reveal Client Secret">👁</button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="input-twitch-redirect">Redirect URI</label>
+                  <input type="text" id="input-twitch-redirect" placeholder="http://localhost/" value="http://localhost/" />
+                </div>
+                <button type="button" id="btn-generate-oauth" class="btn btn-primary">Generate OAuth URL</button>
+              </div>
+
+              <!-- Token Helper -->
+              <div class="settings-card full-width">
+                <h4 class="card-title">🔗 Token Helper</h4>
+                <div class="form-group">
+                  <label for="twitch-redirect-paste">Paste OAuth Response URL</label>
+                  <div class="input-button-group">
+                    <input type="text" id="twitch-redirect-paste" placeholder="http://localhost/#access_token=..." />
+                    <button type="button" id="btn-parse-redirect" class="btn btn-info">Parse</button>
+                  </div>
+                  <small class="help-text">Copy the full URL from your browser after OAuth approval</small>
+                </div>
+                <div id="oauth-helper" class="oauth-helper"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Extension Tab Content -->
+          <div id="twitch-extension-content" class="twitch-tab-content" style="display: none;">
+            <div class="twitch-grid">
+              <!-- Extension Credentials -->
+              <div class="settings-card">
+                <h4 class="card-title">🔐 Extension Credentials</h4>
+                <p class="card-description">
+                  Get these from your <a href="https://dev.twitch.tv/console" target="_blank">Twitch Developer Console</a>
+                </p>
+                <div class="form-group">
+                  <label for="extension-client-id">Extension Client ID</label>
+                  <div class="reveal-wrapper">
+                    <input type="password" id="extension-client-id" placeholder="Enter Extension Client ID" />
+                    <button type="button" class="reveal-btn" data-target="extension-client-id" aria-label="Reveal Extension Client ID">👁</button>
+                  </div>
+                  <small class="help-text">Developer Console → Extensions → General</small>
+                </div>
+                <div class="form-group">
+                  <label for="extension-secret">Extension Secret</label>
+                  <div class="reveal-wrapper">
+                    <input type="password" id="extension-secret" placeholder="Enter Extension Secret" />
+                    <button type="button" class="reveal-btn" data-target="extension-secret" aria-label="Reveal Extension Secret">👁</button>
+                  </div>
+                  <small class="help-text">Developer Console → Extensions → Settings → Secrets</small>
+                </div>
+                <div class="form-group">
+                  <label for="extension-client-secret">Extension Client Secret</label>
+                  <div class="reveal-wrapper">
+                    <input type="password" id="extension-client-secret" placeholder="Enter Client Secret" />
+                    <button type="button" class="reveal-btn" data-target="extension-client-secret" aria-label="Reveal Extension Client Secret">👁</button>
+                  </div>
+                  <small class="help-text">For API calls and username fetching</small>
+                </div>
+              </div>
+
+              <!-- Backend Configuration & Status -->
+              <div class="settings-card">
+                <h4 class="card-title">🚀 Backend & Status</h4>
+                <div class="form-group">
+                  <label for="extension-backend-url">Backend URL</label>
+                  <input type="url" id="extension-backend-url" placeholder="https://your-backend.vercel.app" />
+                  <small class="help-text">Your deployed extension backend (Vercel, Railway, etc.)</small>
+                </div>
+                
+                <!-- Status Display -->
+                <div class="status-display">
+                  <div class="status-item">
+                    <span class="status-label">Backend:</span>
+                    <span class="status-value" id="backend-status">Not configured</span>
+                  </div>
+                  <div class="status-item">
+                    <span class="status-label">Credentials:</span>
+                    <span class="status-value" id="credentials-status">Incomplete</span>
+                  </div>
+                </div>
+                
+                <div class="button-group">
+                  <button type="button" id="btn-test-extension" class="btn btn-success">Test Connection</button>
+                  <button type="button" id="btn-deploy-extension" class="btn btn-purple">Deploy Guide</button>
+                </div>
+                
+                <button type="button" id="btn-save-extension" class="btn btn-primary" style="margin-top: 12px; width: 100%;">Save All Settings</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="settings-youtube" class="settings-tab">
+          <div class="settings-section">
+            <h3>🔴 YouTube Live Integration</h3>
+            <p>Connect to YouTube Live Chat for viewer interactions. Viewers can use chat commands or emojis to control their avatars.</p>
+            
+            <div class="setting-row">
+              <label for="youtube-api-key">YouTube API Key:</label>
+              <div class="reveal-wrapper">
+                <input type="password" id="youtube-api-key" placeholder="Enter your YouTube Data API v3 key">
+                <button type="button" class="reveal-btn" data-target="youtube-api-key" aria-label="Reveal API Key">👁</button>
+              </div>
+              <button type="button" id="youtube-validate-key">Validate Key</button>
+            </div>
+            
+            <div class="setting-row">
+              <label for="youtube-channel-id">Channel ID:</label>
+              <div class="reveal-wrapper">
+                <input type="password" id="youtube-channel-id" placeholder="Your YouTube channel ID">
+                <button type="button" class="reveal-btn" data-target="youtube-channel-id" aria-label="Reveal Channel ID">👁</button>
+              </div>
+              <button type="button" id="youtube-get-channel-info">Get Channel Info</button>
+            </div>
+            
+            <div id="youtube-channel-info" style="display: none;">
+              <div class="info-display">
+                <h4>Channel Information:</h4>
+                <div id="youtube-channel-details"></div>
+              </div>
+            </div>
+            
+            <div class="setting-row">
+              <button type="button" id="youtube-connect" class="connect-btn" disabled>Connect to YouTube</button>
+              <button type="button" id="youtube-disconnect" class="disconnect-btn" style="display: none;">Disconnect</button>
+              <span id="youtube-status" class="status-indicator">Disconnected</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="settings-discord" class="settings-tab">
+          <div class="settings-section">
+            <h3>💬 Discord Bot Integration</h3>
+            <p>Connect a Discord bot to monitor commands from Discord. This keeps your YouTube chat clean while allowing viewer participation through Discord.</p>
+            
+            <div class="setting-row">
+              <label for="discord-bot-token">Discord Bot Token:</label>
+              <div class="reveal-wrapper">
+                <input type="password" id="discord-bot-token" placeholder="Bot token from Discord Developer Portal">
+                <button type="button" id="discord-reveal-token-btn" class="reveal-btn" aria-label="Reveal Bot Token">👁️ Show</button>
+              </div>
+              <button type="button" id="discord-validate-btn">Validate Token</button>
+            </div>
+            <div id="discord-validation-result" class="validation-result"></div>
+            
+            <div class="setting-row">
+              <label for="discord-channel-id">Discord Channel ID:</label>
+              <input type="text" id="discord-channel-id" placeholder="Channel ID where commands will be monitored">
+              <button type="button" id="discord-channel-info-btn">Get Channel Info</button>
+            </div>
+            <div id="discord-channel-result" class="validation-result"></div>
+            
+            <div class="setting-row">
+              <button type="button" id="discord-connect-btn" class="connect-btn">Connect to Discord</button>
+              <button type="button" id="discord-disconnect-btn" class="disconnect-btn" style="display: none;">Disconnect</button>
+              <button type="button" id="discord-test-message-btn" class="test-btn" style="display: none;">Send Test Message</button>
+              <span id="discord-status" class="status-indicator">❌ Disconnected</span>
+            </div>
+            
+            <div class="setting-row">
+              <div class="info-panel">
+                <h4>Setup Instructions:</h4>
+                <ol style="font-size: 0.8em; margin: 8px 0;">
+                  <li>Go to <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a></li>
+                  <li>Create a new application and add a bot</li>
+                  <li>Copy the bot token (keep it secret!)</li>
+                  <li>Invite the bot to your Discord server with "Send Messages" and "Read Message History" permissions</li>
+                  <li>Right-click your Discord channel → "Copy Channel ID" (enable Developer Mode if needed)</li>
+                  <li>Paste both token and channel ID above and connect</li>
+                </ol>
+                <p style="font-size: 0.75em; opacity: 0.8; margin-top: 8px;">
+                  ✅ Supported commands: !attack, !defend, !heal, !avatar [name]<br>
+                  ✅ Commands from Discord won't spam your YouTube chat<br>
+                  ✅ Perfect for viewers who prefer Discord over YouTube Live Chat
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <section id="settings-style" class="settings-tab">
+          <h3 style="margin:4px 0 8px;font-size:0.8rem;letter-spacing:.15em;opacity:.8;">Battlefield Art</h3>
+          <div class="setting-inline">
+            <label for="input-battlefield-bg">Battlefield</label>
+            <select id="input-battlefield-bg"></select>
+          </div>
+          <div class="setting-inline" style="align-items:center;gap:8px;">
+            <label for="input-randomize-battlefield" style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="input-randomize-battlefield" />
+              <span>Randomly cycle battlefield</span>
+            </label>
+            <small style="opacity:0.7;font-size:0.75rem;">When enabled the battlefield will randomly change through available images</small>
+          </div>
+        </section>
+
+        <section id="settings-audio" class="settings-tab">
+          <h3 style="margin:4px 0 8px;font-size:0.8rem;letter-spacing:.15em;opacity:.8;">Audio Categories</h3>
+          <p style="opacity:0.7;font-size:0.65rem;margin:0 0 12px 0;">Music: .mp3 files in UI folder and files named music.mp3<br>SFX: All other audio files</p>
+          
+          <div class="setting-inline">
+            <label for="input-sfx-volume">SFX Volume</label>
+            <input type="range" id="input-sfx-volume" min="0" max="1" step="0.1" value="1" />
+            <span id="sfx-volume-display">100%</span>
+          </div>
+          
+          <div class="setting-inline">
+            <label for="input-music-volume">Music Volume</label>
+            <input type="range" id="input-music-volume" min="0" max="1" step="0.1" value="1" />
+            <span id="music-volume-display">100%</span>
+          </div>
+        </section>
+
+        <div id="settings-buttons">
+          <button id="btn-settings-save">Save Settings</button>
+          <button id="btn-settings-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Load moved game scripts from src/game (synchronous, preserves ordering) -->
+  <!-- Core utilities loaded first -->
+  <script src="src/utils/logger.js"></script>
+  <script src="src/utils/assetHelpers.js"></script>
+  <script src="src/utils/audioHelper.js"></script>
+  <script src="src/utils/settingsSchema.js"></script>
+  <script src="src/core/registries.js"></script>
+  
+  <script src="src/game/gameState.js"></script>
+  <script src="src/game/actionProcessor.js"></script>
+  <script src="src/game/gameStateMigration.js"></script>
+  <script src="src/game/gameInit.js"></script>
+  <script src="src/game/buffSystem.js"></script>
+  
+  <!-- Backend sync for Twitch extension integration -->
+  <script src="src/integration/backendSync.js"></script>
+  
+  <!-- Modular renderer scripts (no bundler; each registers globals) -->
+  <script src="src/renderer/eventBus.js"></script>
+  <script src="src/renderer/stateManager.js"></script>
+  <script src="src/renderer/memoryManager.js"></script>
+  <script src="src/renderer/audioMixer.js"></script>
+  <script src="src/renderer/audio.js"></script>
+  <script src="src/renderer/settings.js"></script>
+  <script src="src/renderer/commandTabs.js"></script>
+  <script src="src/renderer/persistenceHelper.js"></script>
+  <script src="src/renderer/domUtils.js"></script>
+  <script src="src/renderer/persistence.js"></script>
+  <script src="src/renderer/coreWrappers.js"></script>
+  <script src="src/renderer/utils.js"></script>
+  <script src="src/renderer/playlist.js"></script>
+  <script type="module" src="src/renderer/waitingRoom.js"></script>
+  <script src="src/renderer/buffs.js"></script>
+  <script src="src/renderer/healthWidget.js"></script>
+  <script src="src/renderer/healthStatus.js"></script>
+  <script src="src/renderer/gameBindings.js"></script>
+  <script src="src/renderer/bootstrap.js"></script>
+  <script src="src/renderer/bossUI.js"></script>
+  <script src="src/renderer/overlays.js"></script>
+  <script src="src/renderer/playerRender.js"></script>
+  <script src="src/renderer/records.js"></script>
+  <script src="src/renderer/ranks.js"></script>
+  <script src="src/renderer/triggers.js"></script>
+  <script src="src/renderer/controls.js"></script>
+  <script src="src/renderer/settingsTabs.js"></script>
+  <script src="src/renderer/youtubeTab.js"></script>
+  <script src="src/renderer/discordTab.js"></script>
+  <script src="src/renderer/extensionTab.js"></script>
+  <script src="src/renderer/settingsModal.js"></script>
+  <!-- Extracted modules -->
+  <script src="src/renderer/assets.js"></script>
+  <script src="src/renderer/avatars.js"></script>
+  <script src="src/renderer/fx.js"></script>
+  <script src="src/renderer/chat.js"></script>
+  <script src="src/renderer/oauth.js"></script>
+  <script src="src/renderer/debugPanel.js"></script>
+  <script src="src/renderer/uiExtras.js"></script>
+  <script src="src/renderer/startController.js"></script>
+  <script src="renderer.js"></script>
+  <script src="src/renderer/gameLoop.js"></script>
+</body>
+</html>

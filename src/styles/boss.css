@@ -1,0 +1,661 @@
+/* Boss container and related components */
+
+#boss-container {
+  flex: 0 0 42%;
+  position: relative;
+  background: #141927;
+  box-shadow: inset 0 0 60px #264272, 0 0 20px #1a2030;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 5;
+  border-right: 2px solid #3f5699;
+}
+
+#boss-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  overflow: hidden;
+  background: #1c273d;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  text-align: center;
+  user-select: none;
+  padding:0;
+}
+
+#boss-image {
+  position: absolute;
+  top:0;left:0;right:0;bottom:0;
+  width:100%;
+  height:100%;
+  object-fit: cover;
+  filter: brightness(0.85) contrast(1.05) saturate(1.1);
+  border-radius: 14px;
+  z-index:0;
+}
+
+/* Boss state overlays */
+.boss-warning-banner, .boss-exhausted-banner { 
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); 
+  padding:20px 30px 22px; font-size:1.05rem; font-weight:900; 
+  letter-spacing:0.22em; text-transform:uppercase; border-radius:54px; 
+  pointer-events:none; text-align:center; line-height:1.1; 
+  will-change:transform,opacity; backdrop-filter:blur(6px) brightness(1.2) saturate(1.2); 
+}
+
+.boss-warning-banner { 
+  background:linear-gradient(135deg, rgba(255,150,40,0.35), rgba(180,40,0,0.22)); 
+  color:#fff4e6; 
+  box-shadow:0 0 26px 10px rgba(255,140,40,0.55), inset 0 0 34px rgba(255,190,100,0.55); 
+  border:2px solid rgba(255,200,150,0.85); 
+  text-shadow:0 0 14px rgba(255,180,90,0.95), 0 0 28px rgba(255,120,30,0.9); 
+  animation:warningBreathe 6s ease-in-out infinite; 
+}
+
+.boss-exhausted-banner { 
+  background:linear-gradient(135deg, rgba(255,60,70,0.38), rgba(120,0,15,0.35)); 
+  color:#ffe5e5; 
+  box-shadow:0 0 28px 10px rgba(255,40,50,0.55), inset 0 0 26px rgba(255,80,90,0.55); 
+  border:2px solid rgba(255,120,130,0.85); 
+  animation:exhaustLoop 3s ease-in-out infinite alternate; 
+  text-shadow:0 0 12px rgba(255,110,110,0.9), 0 0 24px rgba(160,0,10,0.85); 
+}
+
+@keyframes warningBreathe { 
+  0%{opacity:.62; transform:translate(-50%,-50%) scale(.88);} 
+  30%{opacity:.98; transform:translate(-50%,-50%) scale(1.12);} 
+  55%{opacity:.75; transform:translate(-50%,-50%) scale(.94);} 
+  78%{opacity:.9; transform:translate(-50%,-50%) scale(1.05);} 
+  100%{opacity:.62; transform:translate(-50%,-50%) scale(.88);} 
+}
+
+@keyframes exhaustLoop { 
+  0%{opacity:0.35; transform:translate(-50%,-50%) scale(0.85);} 
+  50%{opacity:1; transform:translate(-50%,-50%) scale(1.04);} 
+  100%{opacity:0.55; transform:translate(-50%,-50%) scale(0.92);} 
+}
+
+/* Exhausted effect - desaturated and pulsing */
+.boss-state-exhausted #boss-image { 
+  filter: grayscale(100%) contrast(1.1) brightness(0.7) sepia(55%) hue-rotate(-20deg) saturate(180%) !important; 
+  animation: exhaustedBW 2s ease-in-out infinite !important;
+  transition: filter 0.2s ease !important;
+}
+
+@keyframes exhaustedBW { 
+  0%,100%{filter:grayscale(90%) contrast(1.05) brightness(0.85) sepia(55%) hue-rotate(-15deg) saturate(160%);} 
+  50%{filter:grayscale(100%) contrast(1.15) brightness(0.92) sepia(65%) hue-rotate(-25deg) saturate(190%);} 
+}
+
+/* Boss visual state effects */
+.boss-state-charging #boss-image::after { content:''; position:absolute; inset:0; }
+
+/* Charging (purple arcane build-up) */
+.boss-state-charging { 
+  animation: bossChargePulse 1.25s ease-in-out infinite, bossChargeTilt 6s linear infinite; 
+  position:relative; 
+}
+
+.boss-state-charging #boss-image { 
+  filter: brightness(1.12) contrast(1.25) saturate(1.35) hue-rotate(270deg); 
+}
+
+.boss-state-charging::before { 
+  content:''; position:absolute; inset:-4px; 
+  background:radial-gradient(circle at 50% 60%, rgba(170,90,255,0.45), rgba(100,30,200,0.12) 55%, transparent 72%); 
+  mix-blend-mode:screen; 
+  animation: bossChargeAura 2.8s linear infinite; 
+  pointer-events:none; 
+}
+
+.boss-state-charging::after { 
+  content:''; position:absolute; left:0; right:0; top:0; bottom:0; 
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.25), transparent 60%),
+    radial-gradient(circle at 70% 70%, rgba(190,110,255,0.25), transparent 65%),
+    repeating-conic-gradient(from 0deg, rgba(200,120,255,0.15) 0deg 10deg, transparent 10deg 20deg);
+  mix-blend-mode:overlay; opacity:0.55; 
+  animation: bossChargeParticles 5s linear infinite; 
+  pointer-events:none; 
+}
+
+@keyframes bossChargePulse { 
+  0%,100% { box-shadow:0 0 40px -4px rgba(170,90,255,0.75), inset 0 0 26px -6px rgba(110,50,200,0.8); } 
+  50% { box-shadow:0 0 70px -2px rgba(210,140,255,0.95), inset 0 0 40px -4px rgba(170,80,255,0.9); } 
+}
+
+@keyframes bossChargeAura { 
+  0% { transform:scale(1); opacity:0.55; } 
+  60% { opacity:0.95; } 
+  100% { transform:scale(1.4); opacity:0; } 
+}
+
+@keyframes bossChargeParticles { 
+  0% { transform:rotate(0deg); opacity:0.55; } 
+  50% { opacity:0.75; } 
+  100% { transform:rotate(360deg); opacity:0.55; } 
+}
+
+@keyframes bossChargeTilt { 
+  0% { transform:perspective(800px) rotateY(0deg); } 
+  50% { transform:perspective(800px) rotateY(4deg); } 
+  100% { transform:perspective(800px) rotateY(0deg); } 
+}
+
+/* Boss State Visual Effects */
+
+/* Boss Cover State - Static Hexagon Shield with Animated Sheen */
+.boss-state-covered { 
+  position: relative; 
+  animation: staticShieldGlow 3s ease-in-out infinite;
+}
+
+.boss-state-covered #boss-image { 
+  filter: brightness(1.05) contrast(1.1) saturate(1.1);
+  transition: filter 0.3s ease;
+  z-index: 1;
+}
+
+/* Create a dedicated cover overlay that doesn't interfere with flex layout */
+.boss-state-covered::before { 
+  content: ''; 
+  position: absolute; 
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    /* True hexagon pattern using proper geometry */
+    repeating-linear-gradient(
+      30deg,
+      transparent 0px,
+      transparent 30px,
+      rgba(0, 220, 255, 0.6) 31px,
+      rgba(0, 220, 255, 0.6) 32px,
+      transparent 33px,
+      transparent 63px
+    ),
+    repeating-linear-gradient(
+      -30deg,
+      transparent 0px,
+      transparent 30px,
+      rgba(0, 220, 255, 0.6) 31px,
+      rgba(0, 220, 255, 0.6) 32px,
+      transparent 33px,
+      transparent 63px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 30px,
+      rgba(0, 220, 255, 0.6) 31px,
+      rgba(0, 220, 255, 0.6) 32px,
+      transparent 33px,
+      transparent 63px
+    );
+  background-size: 50px 50px;
+  border-radius: 14px;
+  mix-blend-mode: screen; 
+  pointer-events: none; 
+  z-index: 5;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 3px rgba(0, 220, 255, 0.5));
+  animation: hexagonDriftSmooth 8s linear infinite;
+}
+
+/* Animated sheen layer */
+.boss-state-covered::after { 
+  content: ''; 
+  position: absolute; 
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(0, 220, 255, 0.4) 50%,
+      rgba(150, 240, 255, 0.6) 52%,
+      rgba(0, 220, 255, 0.4) 54%,
+      transparent 60%,
+      transparent 100%
+    );
+  border-radius: 14px;
+  mix-blend-mode: screen; 
+  pointer-events: none; 
+  animation: sheenSweep 2.5s ease-in-out infinite;
+  z-index: 6;
+}
+
+/* Shield animation keyframes */
+@keyframes staticShieldGlow { 
+  0%, 100% { 
+    box-shadow:
+      0 0 15px rgba(0, 180, 255, 0.4),
+      0 0 30px rgba(0, 150, 255, 0.2),
+      inset 0 0 15px rgba(0, 220, 255, 0.1);
+  } 
+  50% { 
+    box-shadow:
+      0 0 20px rgba(0, 200, 255, 0.6),
+      0 0 40px rgba(0, 180, 255, 0.3),
+      inset 0 0 20px rgba(0, 240, 255, 0.2);
+  } 
+}
+
+@keyframes sheenSweep { 
+  0% { 
+    transform: translateY(-100%);
+    opacity: 0;
+  } 
+  10% { 
+    opacity: 1;
+  }
+  90% { 
+    opacity: 1;
+  }
+  100% { 
+    transform: translateY(100%);
+    opacity: 0;
+  } 
+}
+
+@keyframes hexagonDrift {
+  0% {
+    transform: translateY(0px) scale(1.2);
+  }
+  100% {
+    transform: translateY(-63px) scale(1.2);
+  }
+}
+
+/* Smooth hexagon drift - cycles without jumping */
+@keyframes hexagonDriftSmooth {
+  0% {
+    background-position: 0px 0px;
+  }
+  100% {
+    background-position: 0px 50px;
+  }
+}
+
+#boss-overlay {
+  color: #a5b9ff;
+  font-weight: 600;
+  text-shadow: 0 0 8px #4a61b7;
+  user-select: none;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 15;
+}
+
+#boss-name {
+  font-size: 2rem;
+  margin: 2px 0 6px 0;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color:#f8fbff;
+  position:relative;
+  display:inline-block;
+  padding:4px 18px 6px;
+  background:linear-gradient(135deg,rgba(14,24,40,0.55),rgba(36,52,78,0.35));
+  border:1px solid rgba(160,200,255,0.25);
+  backdrop-filter:blur(3px);
+  border-radius:14px;
+  text-shadow:0 0 6px #7eb6ff,0 0 18px #3a6ea8;
+  box-shadow:0 0 12px #19324e inset,0 0 22px #224b74aa;
+  max-width:72%;
+  overflow:hidden;
+  white-space:normal;
+  text-overflow:clip;
+  line-height:1.05;
+  text-align:center;
+  margin-left:auto; 
+  margin-right:auto;
+}
+
+/* Integrated sub name */
+#boss-name .boss-sub { 
+  font-weight:800; font-size:1.15em; font-style:italic; 
+  letter-spacing:.22em; color:#d4e6ff; 
+  text-shadow:0 0 10px #5fa9ff,0 0 18px #1d5d9e; 
+}
+
+#boss-name .boss-base { letter-spacing:.18em; }
+
+/* Stacked line variant */
+#boss-name .boss-base-line { 
+  display:inline-block; font-weight:900; letter-spacing:.18em; 
+}
+
+#boss-name .boss-sub-line { 
+  display:inline-block; font-weight:800; font-size:0.75em; 
+  font-style:italic; letter-spacing:.28em; margin-top:6px; 
+  text-shadow:0 0 10px #5fa9ff,0 0 18px #1d5d9e; opacity:0.95; 
+}
+
+@keyframes glow {
+  from { filter: drop-shadow(0 0 10px rgba(255, 94, 98, 0.5)); }
+  to { filter: drop-shadow(0 0 20px rgba(255, 153, 102, 0.8)); }
+}
+
+#boss-hp-text {
+  font-size: 1.4rem;
+  margin: 0 0 12px 0;
+  font-weight: 800;
+  background: linear-gradient(90deg, #64b3f4, #c2e59c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#boss-status-text {
+  font-size: 1.2rem;
+  margin: 0 0 12px 0;
+  min-height: 24px;
+  font-weight: 700;
+  color: #ff7b7b;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px rgba(255, 123, 123, 0.6);
+  text-align:center;
+}
+
+#boss-info-row {
+  display: flex;
+  gap: 22px;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: auto;
+  padding: 12px 18px 18px;
+  flex-wrap: wrap;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.boss-last-attack-block, .boss-timer-block {
+  display:flex;
+  flex-direction:column;
+  background:linear-gradient(145deg,rgba(15,22,40,0.65),rgba(32,44,72,0.4));
+  padding:10px 14px 12px;
+  border-radius:14px;
+  backdrop-filter: blur(6px);
+  min-width:140px;
+  max-width:200px;
+  text-align:center;
+  box-shadow:0 3px 10px #0009, inset 0 0 14px #2d3d66;
+  flex:0 0 auto;
+}
+
+.boss-last-attack-block .label, .boss-timer-block .label {
+  font-size:0.75rem;
+  letter-spacing:0.12em;
+  color:#9ab4ff;
+  font-weight:800;
+}
+
+.boss-last-attack-block .value, .boss-timer-block .value {
+  font-size:1.6rem;
+  font-weight:700;
+  color:#ffd9a8;
+  text-shadow:0 0 6px #aa7a3a;
+  margin-top:4px;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+}
+
+.boss-hp-bar-container { margin:4px 0 6px 0; }
+
+.boss-hp-bar-bg { 
+  width:62%; margin:8px auto 0; height:42px; 
+  background:linear-gradient(180deg,#0d1522,#182333); 
+  position:relative; overflow:hidden; 
+  box-shadow:0 4px 12px #000b,0 0 20px #122539 inset,0 0 8px #254664 inset; 
+  border:2px solid #2b4a6b; border-radius:4px; 
+}
+
+.boss-hp-bar-bg:before { 
+  content:""; position:absolute; inset:0; 
+  background:linear-gradient(90deg,rgba(255,255,255,0.08),rgba(255,255,255,0) 18%,rgba(255,255,255,0) 82%,rgba(255,255,255,0.15)); 
+  mix-blend-mode:overlay; pointer-events:none; 
+}
+
+.boss-hp-bar-fill { 
+  position:absolute; top:0; left:0; bottom:0; 
+  background:linear-gradient(90deg,#ff2d2d,#c80000 55%,#5a0000); 
+  box-shadow:0 0 22px #ff1e1e,0 0 10px #ff6262 inset,0 0 16px #ff0000; 
+  transition: width 0.55s cubic-bezier(.6,.2,.2,1), background 0.6s ease, box-shadow 0.6s ease; 
+  display:flex; align-items:center; justify-content:center; 
+  font-weight:900; letter-spacing:0.2em; font-size:0.95rem; 
+  color:#fff; text-shadow:0 0 8px #300,0 0 14px #f44; 
+  border-radius:0; 
+}
+
+.boss-hp-bar-fill.hp-mid { 
+  background:linear-gradient(90deg,#ff962a,#ff5c00 55%,#692300); 
+  box-shadow:0 0 22px #ff8a1e,0 0 12px #ffb05b inset,0 0 16px #ff7a00; 
+}
+
+.boss-hp-bar-fill.hp-low { 
+  background:linear-gradient(90deg,#ff003c,#b80024 60%,#400008); 
+  box-shadow:0 0 30px #ff234f,0 0 14px #ff5e7c inset,0 0 18px #ff003c; 
+  animation: hp-pulse 1.05s ease-in-out infinite; 
+}
+
+@keyframes hp-pulse {
+  0%,100% { filter:brightness(1); }
+  50% { filter:brightness(1.25); }
+}
+
+.boss-hp-text-line { display:none; }
+
+#boss-last-move, #boss-timer { 
+  font-weight:800; color:#ffd9a8; text-shadow:0 0 8px #aa7a3a; 
+  min-width:140px; text-align:center; text-transform:uppercase; 
+  letter-spacing:0.05em; font-size:1.1rem; 
+}
+
+/* Pre-battle placeholder screen */
+.prebattle #boss-image { opacity:0; }
+.prebattle #boss-overlay { display:none; }
+
+#boss-image-wrapper.prebattle::before { 
+  content:''; position:absolute; inset:0; 
+  background:url('app://assets/ui/default-start.png') center/cover no-repeat, 
+    radial-gradient(circle at 50% 55%, rgba(14,20,32,0.85), rgba(8,12,20,0.9)); 
+  filter:brightness(.95) contrast(1.1); 
+}
+
+#boss-image-wrapper.prebattle::after { 
+  content:'BATTLE COMMENCING SOON\A TYPE IN CHAT TO SPAWN'; 
+  white-space:pre; position:absolute; left:50%; top:50%; 
+  transform:translate(-50%,-50%); text-align:center; 
+  font-weight:900; letter-spacing:.22em; font-size:2.2rem; 
+  line-height:1.15; color:#e5f1ff; 
+  text-shadow:0 0 12px #4ba9ff,0 0 28px #1c5d9e; 
+  width:82%; max-width:800px; 
+}
+
+@media (max-width:900px){ 
+  #boss-image-wrapper.prebattle::after { 
+    font-size:1.5rem; letter-spacing:.18em; 
+  } 
+}
+
+/* Match outcome overlay confined to boss area */
+.game-overlay { 
+  position:absolute; inset:0; 
+  background:radial-gradient(circle at 50% 55%, rgba(20,24,40,0.72), rgba(8,10,18,0.88)); 
+  display:flex; align-items:center; justify-content:center; 
+  opacity:0; pointer-events:none; transition:opacity .5s ease; z-index:50; 
+}
+
+.game-overlay.shown { opacity:1; pointer-events:auto; }
+
+.outcome-text { 
+  position:absolute; inset:0; display:flex; flex-direction:column; 
+  align-items:center; justify-content:center; padding:4%; 
+  text-align:center; max-width:92%; margin:0 auto; 
+}
+
+.outcome-main { max-width:100%; overflow-wrap:break-word; }
+.outcome-sub { max-width:100%; overflow-wrap:break-word; }
+
+.outcome-main { 
+  margin:0; font-size:clamp(2.6rem, 7vw, 4.8rem); 
+  letter-spacing:.16em; font-weight:900; text-transform:uppercase; 
+  line-height:0.9; white-space:nowrap; display:inline-block; 
+  padding:0 .15em; 
+}
+
+.game-overlay.victory .outcome-main { 
+  letter-spacing:.14em; 
+  text-shadow:0 0 4px #ffefc4,0 0 10px #ffd978,0 0 18px #ffc246,0 0 28px #ffb338; 
+  animation:prebattlePulse 6.5s ease-in-out infinite; 
+}
+
+.game-overlay.defeat .outcome-main { 
+  letter-spacing:.18em; 
+  animation:prebattlePulse 6.5s ease-in-out infinite; 
+}
+
+.outcome-sub { 
+  margin:10px 0 0; font-size:clamp(1rem, 2.2vw, 2.2rem); 
+  letter-spacing:.28em; font-weight:800; text-transform:uppercase; 
+}
+
+.outcome-hint { 
+  margin-top:18px; font-size:clamp(.6rem,1.1vw,1rem); 
+  letter-spacing:.25em; opacity:.75; 
+}
+
+.game-overlay.victory .outcome-main { 
+  color:#ffe9a6; background:none; 
+  text-shadow:0 0 2px #fff4d0,0 0 6px #ffe9a6,0 0 12px #ffd766,0 0 20px #ffcb47,0 0 32px #ffb300; 
+}
+
+.game-overlay.defeat .outcome-main { 
+  color:#ff9090; background:none; 
+  text-shadow:0 0 2px #ffd0d0,0 0 6px #ff9090,0 0 12px #ff5555,0 0 20px #ff3030,0 0 34px #d70000; 
+}
+
+.game-overlay.victory .outcome-sub { 
+  color:#f6f2ff; text-shadow:0 0 20px #ffcf60; 
+}
+
+.game-overlay.defeat .outcome-sub { 
+  color:#ffe1e1; text-shadow:0 0 20px #ff3c3c; 
+}
+
+.game-overlay.prebattle .outcome-main { 
+  font-size:clamp(2.4rem,7vw,4.6rem); line-height:.9; 
+  letter-spacing:.20em; color:#d9ecff; 
+  text-shadow:0 0 6px #bce6ff,0 0 14px #7dc4ff,0 0 26px #3aa4ff; 
+}
+
+.game-overlay.prebattle .outcome-sub { 
+  font-size:clamp(.75rem,1.6vw,1.1rem); margin-top:18px; 
+  letter-spacing:.32em; color:#e6f3ff; 
+  text-shadow:0 0 10px #5fa9ff,0 0 22px #1d5d9e; opacity:.95; 
+}
+
+.game-overlay.prebattle .outcome-main { white-space:normal; }
+
+/* Center stack words precisely */
+.game-overlay.prebattle .outcome-main { 
+  display:flex; flex-direction:column; align-items:center; 
+}
+
+.game-overlay.prebattle .outcome-main .battle-word { 
+  display:block; font-size:clamp(2.2rem,6.4vw,4.8rem); 
+  line-height:.9; white-space:nowrap; text-align:center; 
+}
+
+/* COMMENCING scales like outcome-sub defeat text; shrink further if needed via JS */
+.game-overlay.prebattle .outcome-main .commencing-word { 
+  display:block; font-size:clamp(1rem,4.2vw,2.6rem); 
+  letter-spacing:.2em; line-height:.95; white-space:nowrap; 
+  text-align:center; 
+}
+
+.game-overlay.prebattle .outcome-text { padding:6% 6% 5%; }
+
+.game-overlay.prebattle .outcome-main { 
+  max-width:90%; margin:0 auto; 
+  animation:prebattlePulse 6.5s ease-in-out infinite; 
+}
+
+@keyframes prebattlePulse { 
+  0%,100%{ transform:scale(1); } 
+  50%{ transform:scale(1.035); } 
+}
+
+.game-overlay.prebattle .outcome-hint { 
+  font-size:clamp(.6rem,1.1vw,1rem); letter-spacing:.25em; 
+  opacity:.8; margin-top:18px; 
+}
+
+.game-overlay.prebattle { 
+  background:radial-gradient(circle at 50% 55%, rgba(18,22,34,0.62), rgba(8,12,20,0.88)); 
+}
+
+.game-overlay.prebattle .outcome-text { 
+  max-width:92%; padding:2% 8% 3% 4%; 
+  background:none; box-shadow:none; border:none; 
+}
+
+#boss-image-wrapper.prebattle.has-prebattle-overlay .game-overlay.prebattle .outcome-text { 
+  backdrop-filter:none; 
+}
+
+#boss-image-wrapper.prebattle.has-prebattle-overlay .game-overlay.prebattle .outcome-main { 
+  font-size:clamp(2rem,6.2vw,4.2rem); 
+}
+
+#boss-image-wrapper.prebattle.has-prebattle-overlay .game-overlay.prebattle .outcome-main .commencing-word { 
+  font-size:clamp(0.9rem,3.8vw,2.3rem); 
+}
+
+#boss-image-wrapper.prebattle.has-prebattle-overlay::after { display:none; }
+
+.boss-outcome-victory #boss-image, .boss-outcome-defeat #boss-image { 
+  filter:grayscale(100%) contrast(1.2) brightness(.8) sepia(65%) hue-rotate(-20deg) saturate(240%); 
+  transition:filter 0.6s ease; 
+}
+
+/* Subtle frosted background behind prebattle text (not a solid box) */
+.game-overlay.prebattle .outcome-text { position:relative; }
+
+/* Removed decorative frosted box behind prebattle text per user request */
+.game-overlay.prebattle .outcome-text::before { display:none !important; }
+
+.game-overlay.prebattle .outcome-text > * { position:relative; z-index:1; }
+
+/* Force explicit centering of prebattle main/sub lines */
+.game-overlay.prebattle .outcome-main,
+.game-overlay.prebattle .outcome-sub { 
+  text-align:center; margin-left:auto; margin-right:auto; 
+}
+
+@media (max-width:1000px){ 
+  .scoreboard-head { font-size:1.3rem; letter-spacing:.18em; } 
+}
+
+@media (max-width:680px){ 
+  .outcome-main { font-size:clamp(2rem,10vw,3.6rem); letter-spacing:.18em; } 
+  .outcome-sub { font-size:clamp(.9rem,3.5vw,1.4rem); letter-spacing:.22em; } 
+}

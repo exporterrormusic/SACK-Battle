@@ -1,0 +1,823 @@
+/* Visual effects, animations, and flashes */
+
+/* Battlefield attack flash effects */
+#battlefield-container { position:relative; }
+
+.attack-flash, .growl-flash { 
+  position:absolute; inset:0; pointer-events:none; 
+  animation-fill-mode:forwards; mix-blend-mode:screen; 
+  backdrop-filter:blur(2px); z-index:6; overflow:visible; 
+}
+
+.attack-flash::before, .growl-flash::before { 
+  content:""; position:absolute; left:50%; top:50%; 
+  width:240vmax; height:240vmax; transform:translate(-50%,-50%) scale(.55); 
+  pointer-events:none; 
+  background:
+    radial-gradient(circle at 0% 100%, rgba(255,150,60,0.55), rgba(255,110,30,0.35) 35%, rgba(40,10,0,0.05) 62%, rgba(0,0,0,0) 78%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.22), rgba(255,255,255,0) 60%);
+  mix-blend-mode:screen; opacity:.65; 
+  animation:attackExtraFill 1300ms ease-out forwards; 
+  filter:blur(2px) saturate(1.25);
+}
+
+@keyframes attackExtraFill { 
+  0%{opacity:0; transform:translate(-50%,-50%) scale(.35) rotate(0deg);} 
+  12%{opacity:.85; transform:translate(-50%,-50%) scale(.7) rotate(4deg);} 
+  45%{opacity:.75; transform:translate(-50%,-50%) scale(1.05) rotate(14deg);} 
+  70%{opacity:.5; transform:translate(-50%,-50%) scale(1.35) rotate(26deg);} 
+  100%{opacity:0; transform:translate(-50%,-50%) scale(1.6) rotate(40deg);} 
+}
+
+/* Simplified single-phase fullscreen flash animations */
+.fx-flash { 
+  position:absolute; inset:-4%; pointer-events:none; z-index:5; 
+  mix-blend-mode:screen; animation-fill-mode:forwards; overflow:visible; 
+}
+
+.scoreboard-mode, #players-container { overscroll-behavior:contain; }
+
+.fx-flash.attack { 
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,240,210,0.95), rgba(255,140,40,0.75) 38%, rgba(90,10,0,0.4) 60%, rgba(0,0,0,0) 74%),
+    radial-gradient(circle at 0% 100%, rgba(255,120,40,0.4), rgba(255,90,10,0.0) 70%),
+    conic-gradient(from 0deg, rgba(255,170,70,0.85), rgba(255,60,10,0.0) 24%, rgba(255,70,20,0.85) 50%, rgba(255,60,10,0.0) 70%, rgba(255,170,70,0.85));
+  filter:contrast(1.4) brightness(1.15) saturate(1.4);
+  animation:fxAttack 1050ms cubic-bezier(.18,.62,.23,.99);
+}
+
+.fx-flash.special { 
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.98), rgba(190,120,255,0.95) 30%, rgba(90,0,140,0.55) 60%, rgba(0,0,0,0) 78%),
+    radial-gradient(circle at 0% 100%, rgba(210,120,255,0.45), rgba(170,60,255,0.0) 70%),
+    conic-gradient(from 0deg, rgba(210,120,255,0.95), rgba(140,0,200,0.0) 18%, rgba(220,140,255,0.95) 46%, rgba(140,0,200,0.0) 64%, rgba(210,120,255,0.95));
+  filter:contrast(1.85) brightness(1.3) saturate(1.8);
+  animation:fxSpecial 1500ms cubic-bezier(.16,.7,.25,1);
+}
+
+.fx-flash.growl { 
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,240,160,0.78), rgba(255,190,60,0.3) 42%, rgba(0,0,0,0) 70%),
+    repeating-conic-gradient(from 0deg, rgba(255,220,120,0.35) 0deg, rgba(255,220,120,0.0) 18deg 24deg);
+  animation:fxGrowl 760ms ease-out;
+}
+
+.fx-flash.massheal { 
+  /* Subtle holy healing glow - no big flash */
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.3), rgba(255,255,255,0.1) 50%, rgba(0,0,0,0) 75%);
+  filter:brightness(1.1);
+  animation:fxMassHealSubtle 800ms ease-out;
+}
+
+.fx-flash.attackup { 
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.95), rgba(255,215,120,0.9) 32%, rgba(255,140,0,0.55) 55%, rgba(80,30,0,0.0) 75%),
+    conic-gradient(from 0deg, rgba(255,200,60,0.85), rgba(255,120,0,0.0) 28%, rgba(255,220,120,0.9) 54%, rgba(255,120,0,0.0) 72%, rgba(255,200,60,0.85));
+  filter:contrast(1.5) brightness(1.2) saturate(1.55);
+  animation:fxAttackUp 1250ms ease-out;
+}
+
+@keyframes fxAttackUp { 
+  0%{opacity:0; transform:scale(.65);} 
+  12%{opacity:1; transform:scale(.95);} 
+  55%{opacity:.92; transform:scale(1.22);} 
+  80%{opacity:.6; transform:scale(1.34);} 
+  100%{opacity:0; transform:scale(1.48);} 
+}
+
+@keyframes fxAttack { 
+  0%{opacity:0; transform:scale(.8);} 
+  12%{opacity:1; transform:scale(1.02);} 
+  55%{opacity:.9; transform:scale(1.15);} 
+  100%{opacity:0; transform:scale(1.28);} 
+}
+
+@keyframes fxSpecial { 
+  0%{opacity:0; transform:scale(.7);} 
+  12%{opacity:1; transform:scale(1.12);} 
+  55%{opacity:.9; transform:scale(1.45);} 
+  85%{opacity:.6; transform:scale(1.6);} 
+  100%{opacity:0; transform:scale(1.72);} 
+}
+
+@keyframes fxGrowl { 
+  0%{opacity:0; transform:scale(.7);} 
+  15%{opacity:1; transform:scale(.95);} 
+  55%{opacity:.8; transform:scale(1.1);} 
+  100%{opacity:0; transform:scale(1.25);} 
+}
+
+@keyframes fxMassHealSubtle { 
+  0%{opacity:0; transform:scale(1);} 
+  30%{opacity:0.4; transform:scale(1.05);} 
+  70%{opacity:0.2; transform:scale(1.1);} 
+  100%{opacity:0; transform:scale(1.15);} 
+}
+
+.attack-flash { 
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,250,230,0.95), rgba(255,140,40,0.8) 32%, rgba(110,20,0,0.45) 58%, rgba(0,0,0,0) 72%),
+    radial-gradient(circle at 0% 100%, rgba(255,120,40,0.4), rgba(255,90,10,0.0) 70%),
+    conic-gradient(from 0deg, rgba(255,170,70,0.85), rgba(255,60,10,0.0) 24%, rgba(255,70,20,0.85) 50%, rgba(255,60,10,0.0) 70%, rgba(255,170,70,0.85));
+  background-blend-mode:screen,normal; 
+  animation:attackFlashUnified 1100ms cubic-bezier(.18,.62,.23,.99); 
+  filter:contrast(1.45) brightness(1.18) saturate(1.45);
+}
+
+.attack-flash.special-flash { 
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.98), rgba(195,120,255,0.95) 30%, rgba(90,0,140,0.55) 60%, rgba(0,0,0,0) 78%),
+    radial-gradient(circle at 0% 100%, rgba(210,120,255,0.45), rgba(170,60,255,0.0) 70%),
+    conic-gradient(from 0deg, rgba(210,120,255,0.95), rgba(140,0,200,0.0) 18%, rgba(220,140,255,0.95) 46%, rgba(140,0,200,0.0) 64%, rgba(210,120,255,0.95));
+  animation:attackFlashSpecialUnified 1500ms cubic-bezier(.16,.7,.25,1); 
+  filter:contrast(1.9) brightness(1.35) saturate(1.9);
+  box-shadow:0 0 140px 50px rgba(180,70,255,0.5), inset 0 0 180px 60px rgba(200,140,255,0.4);
+}
+
+/* Subtle mass heal glow */
+.massheal-flash { 
+  position:absolute; inset:0; 
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2), rgba(255,255,255,0.1) 60%, rgba(0,0,0,0) 75%);
+  mix-blend-mode:normal; animation:massHealPulseSubtle 800ms ease-out; 
+  filter:brightness(1.1);
+}
+
+@keyframes massHealPulseSubtle { 
+  0%{opacity:0; transform:scale(1);} 
+  30%{opacity:0.3; transform:scale(1.02);} 
+  70%{opacity:0.15; transform:scale(1.05);} 
+  100%{opacity:0; transform:scale(1.08);} 
+}
+
+@keyframes attackFlashSpecial { 
+  0%{opacity:0;} 
+  10%{opacity:1;} 
+  60%{opacity:.85;} 
+  100%{opacity:0;} 
+}
+
+.growl-flash { 
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,240,160,0.75), rgba(255,190,60,0.28) 38%, rgba(0,0,0,0) 70%),
+    repeating-conic-gradient(from 0deg, rgba(255,220,120,0.35) 0deg, rgba(255,220,120,0.0) 18deg 24deg);
+  animation:growlFlash 760ms ease-out; 
+}
+
+@keyframes attackFlash { 
+  0%{opacity:0;} 
+  8%{opacity:1;} 
+  55%{opacity:.85;} 
+  100%{opacity:0;} 
+}
+
+@keyframes attackFlashUnified { 
+  0%{opacity:0; transform:scale(.85);} 
+  12%{opacity:1; transform:scale(1.05);} 
+  55%{opacity:.9; transform:scale(1.18);} 
+  100%{opacity:0; transform:scale(1.32);} 
+}
+
+@keyframes attackFlashSpecialUnified { 
+  0%{opacity:0; transform:scale(.7);} 
+  12%{opacity:1; transform:scale(1.15);} 
+  55%{opacity:.9; transform:scale(1.5);} 
+  85%{opacity:.6; transform:scale(1.65);} 
+  100%{opacity:0; transform:scale(1.78);} 
+}
+
+/* Ultra-wide variants to guarantee full coverage on very wide aspect ratios */
+@keyframes attackFlashUW { 
+  0%{opacity:0; transform:scale(.55);} 
+  12%{opacity:1; transform:scale(1.2);} 
+  55%{opacity:.9; transform:scale(2.0);} 
+  100%{opacity:0; transform:scale(2.4);} 
+}
+
+@keyframes attackFlashSpecialUW { 
+  0%{opacity:0; transform:scale(.5);} 
+  12%{opacity:1; transform:scale(1.3);} 
+  55%{opacity:.9; transform:scale(2.3);} 
+  85%{opacity:.6; transform:scale(2.6);} 
+  100%{opacity:0; transform:scale(2.9);} 
+}
+
+@keyframes growlFlash { 
+  0%{opacity:0; transform:scale(.65);} 
+  15%{opacity:1; transform:scale(1.05);} 
+  55%{opacity:.8; transform:scale(1.25);} 
+  100%{opacity:0; transform:scale(1.45);} 
+}
+
+@keyframes growlFlashUW { 
+  0%{opacity:0; transform:scale(.55);} 
+  15%{opacity:1; transform:scale(1.2);} 
+  55%{opacity:.8; transform:scale(1.8);} 
+  100%{opacity:0; transform:scale(2.2);} 
+}
+
+/* Override existing growl animation definition (if any) by redefining growl-flash */
+.growl-flash { animation:growlFlash 760ms ease-out; }
+
+.attack-flash.ultra-wide:not(.special-flash) { animation:attackFlashUW 1200ms cubic-bezier(.18,.62,.23,.99); }
+.attack-flash.special-flash.ultra-wide { animation:attackFlashSpecialUW 1600ms cubic-bezier(.16,.7,.25,1); }
+.growl-flash.ultra-wide { animation:growlFlashUW 900ms ease-out; }
+
+/* Add gigantic pseudo overlay to ensure corners receive tint on extreme ultrawide */
+.attack-flash::after, .growl-flash::after { 
+  content:""; position:absolute; left:50%; top:50%; 
+  width:300vmax; height:300vmax; transform:translate(-50%,-50%); 
+  pointer-events:none; 
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,200,120,0.18), rgba(255,140,40,0.08) 45%, rgba(0,0,0,0) 70%),
+    radial-gradient(circle at 0% 100%, rgba(255,160,70,0.25), rgba(255,120,40,0.05) 55%, rgba(0,0,0,0) 78%);
+  mix-blend-mode:screen; opacity:.7; 
+  animation:flashHalo 1400ms ease-out forwards; 
+}
+
+@keyframes flashHalo { 
+  0%{opacity:0; transform:translate(-50%,-50%) scale(.4);} 
+  10%{opacity:.8; transform:translate(-50%,-50%) scale(.9);} 
+  55%{opacity:.55; transform:translate(-50%,-50%) scale(1.4);} 
+  100%{opacity:0; transform:translate(-50%,-50%) scale(1.8);} 
+}
+
+/* Particle layers for attack/growl */
+.attack-particles, .growl-particles { 
+  position:absolute; inset:0; pointer-events:none; 
+  overflow:visible; z-index:4; 
+}
+
+.attack-particles .flame { 
+  position:absolute; width:38px; height:60px; 
+  background:radial-gradient(circle at 50% 65%, rgba(255,250,200,1), rgba(255,170,40,0.85) 50%, rgba(255,90,0,0.25) 78%, rgba(0,0,0,0) 86%); 
+  filter:blur(0.4px) contrast(1.2); mix-blend-mode:screen; 
+  border-radius:50% 50% 42% 42%; 
+  animation:flameRise 1200ms cubic-bezier(.25,.7,.3,1) forwards; 
+  opacity:0; 
+}
+
+.attack-particles .smoke { 
+  position:absolute; width:64px; height:64px; 
+  background:radial-gradient(circle at 48% 52%, rgba(120,100,90,0.65), rgba(50,40,32,0.22) 60%, rgba(0,0,0,0) 78%); 
+  mix-blend-mode:screen; filter:blur(3px) grayscale(25%); 
+  border-radius:50%; 
+  animation:smokeDrift 1500ms ease-out forwards; 
+  opacity:0; 
+}
+
+.attack-particles .spark { 
+  position:absolute; width:7px; height:7px; 
+  background:linear-gradient(135deg,#fffef5,#ffd383,#ff7b25); 
+  border-radius:50%; 
+  box-shadow:0 0 10px 3px rgba(255,180,70,0.95),0 0 18px 6px rgba(255,110,20,0.65); 
+  animation:sparkFly 900ms ease-out forwards; 
+  opacity:0; 
+}
+
+.growl-particles .ring { 
+  position:absolute; width:140px; height:140px; 
+  left:50%; top:50%; transform:translate(-50%,-50%) scale(0.4); 
+  border:4px solid rgba(255,220,120,0.5); 
+  border-radius:50%; 
+  box-shadow:0 0 18px rgba(255,200,90,0.55); 
+  animation:growlRing 820ms ease-out forwards; 
+}
+
+@keyframes flameRise { 
+  0%{transform:translateY(46px) scale(0.38) rotate(0deg); opacity:0;} 
+  12%{opacity:1;} 
+  45%{transform:translateY(-6px) scale(1.05) rotate(8deg); opacity:1;} 
+  70%{transform:translateY(-40px) scale(.8) rotate(16deg); opacity:.85;} 
+  100%{transform:translateY(-78px) scale(.55) rotate(26deg); opacity:0;} 
+}
+
+@keyframes smokeDrift { 
+  0%{transform:translateY(10px) scale(.4); opacity:0;} 
+  18%{opacity:.55;} 
+  55%{transform:translate(30px,-20px) scale(1); opacity:.35;} 
+  100%{transform:translate(60px,-50px) scale(1.3); opacity:0;} 
+}
+
+@keyframes sparkFly { 
+  0%{transform:translate(0,0) scale(.4); opacity:0;} 
+  20%{opacity:1;} 
+  60%{transform:translate(var(--tx,40px), var(--ty,-60px)) scale(.9); opacity:.9;} 
+  100%{transform:translate(calc(var(--tx,40px)*1.3), calc(var(--ty,-60px)*1.2)) scale(.3); opacity:0;} 
+}
+
+@keyframes growlRing { 
+  0%{opacity:0; transform:translate(-50%,-50%) scale(.3);} 
+  20%{opacity:.9;} 
+  60%{opacity:.5;} 
+  100%{opacity:0; transform:translate(-50%,-50%) scale(1.25);} 
+}
+
+/* Canvas battle effect overlay */
+.battle-effect-canvas { 
+  position:absolute; inset:0; pointer-events:none; z-index:5; 
+}
+
+/* Countdown timer flash */
+#countdown-timer.flash {
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,100% { transform: scale(1); text-shadow: 0 0 8px #ff4444; }
+  50% { transform: scale(1.2); text-shadow: 0 0 16px #ff0000; }
+}
+
+/* Enhanced Burst Gauge - Military HUD Style with Visual Divisions */
+.burst-gauge-container {
+  position: absolute;
+  bottom: 45px; /* Moved up from player header to avoid covering name */
+  left: 8px;
+  right: 8px;
+  height: 20px; /* Increased height from 16px to 20px for better readability */
+  background: linear-gradient(90deg, 
+    rgba(10, 15, 25, 0.85) 0%, 
+    rgba(15, 20, 35, 0.9) 50%, 
+    rgba(10, 15, 25, 0.85) 100%);
+  border: 1px solid rgba(120, 160, 255, 0.4);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  padding: 3px 4px; /* Increased padding for better centering */
+  gap: 2px; /* Gap between burst pips */
+  z-index: 10;
+  backdrop-filter: blur(3px);
+  box-shadow: 
+    0 0 6px rgba(60, 120, 255, 0.3),
+    inset 0 0 4px rgba(80, 140, 255, 0.15);
+}
+
+.burst-gauge-container::before {
+  content: "BURST";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.65rem; /* Larger font */
+  font-weight: 900;
+  color: rgba(255, 255, 255, 1); /* Pure white */
+  text-shadow: 
+    0 0 8px rgba(60, 140, 255, 1),
+    0 0 4px rgba(0, 0, 0, 1),
+    1px 1px 3px rgba(0, 0, 0, 0.9); /* Multiple shadows for maximum contrast */
+  letter-spacing: 0.15em;
+  z-index: 10; /* Very high z-index */
+  line-height: 1;
+  text-transform: uppercase;
+  mix-blend-mode: screen; /* Blending mode to help with visibility */
+}
+
+.burst-pip {
+  width: 100%;
+  height: 8px; /* Increased from 6px to match taller container */
+  background: linear-gradient(90deg,
+    rgba(40, 50, 70, 0.6),
+    rgba(50, 65, 85, 0.8),
+    rgba(40, 50, 70, 0.6));
+  border: 1px solid rgba(80, 100, 140, 0.4);
+  border-radius: 2px;
+  position: relative;
+  transition: all 0.4s ease;
+  overflow: hidden;
+}
+
+.burst-pip::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--fill-width, 0%);
+  background: linear-gradient(90deg,
+    rgba(255, 140, 60, 0.9),
+    rgba(255, 180, 80, 1),
+    rgba(255, 200, 100, 0.9));
+  border-radius: 1px;
+  transition: width 0.6s ease, box-shadow 0.4s ease;
+  box-shadow: 
+    0 0 8px rgba(255, 160, 70, 0.8),
+    inset 0 0 4px rgba(255, 220, 120, 0.6);
+}
+
+.burst-pip-filled::before {
+  background: linear-gradient(90deg,
+    rgba(255, 140, 60, 1),
+    rgba(255, 180, 80, 1),
+    rgba(255, 140, 60, 1));
+  box-shadow: 
+    0 0 12px rgba(255, 160, 70, 1),
+    inset 0 0 6px rgba(255, 220, 120, 0.8),
+    0 0 20px rgba(255, 140, 60, 0.5);
+}
+
+.burst-pip-filled {
+  border-color: rgba(255, 180, 80, 0.8);
+  background: linear-gradient(90deg,
+    rgba(60, 45, 20, 0.8),
+    rgba(80, 60, 30, 1),
+    rgba(60, 45, 20, 0.8));
+  box-shadow: 
+    0 0 6px rgba(255, 160, 70, 0.6),
+    inset 0 0 4px rgba(255, 200, 100, 0.3);
+}
+
+.burst-ready {
+  animation: burstReady 1.2s infinite ease-in-out;
+  border-color: rgba(255, 200, 100, 1);
+  box-shadow: 
+    0 0 16px rgba(255, 160, 70, 0.8),
+    inset 0 0 12px rgba(255, 220, 120, 0.4);
+}
+
+.burst-ready::before {
+  animation: burstReadyLabel 1.2s infinite ease-in-out;
+}
+
+@keyframes burstReady {
+  0%, 100% { 
+    transform: scale(1); 
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.02); 
+    filter: brightness(1.3);
+    box-shadow: 
+      0 0 20px rgba(255, 160, 70, 1),
+      inset 0 0 16px rgba(255, 220, 120, 0.6);
+  }
+}
+
+@keyframes burstReadyLabel {
+  0%, 100% { 
+    color: rgba(255, 200, 100, 0.9);
+    text-shadow: 0 0 4px rgba(255, 160, 70, 0.8);
+  }
+  50% { 
+    color: rgba(255, 220, 120, 1);
+    text-shadow: 
+      0 0 8px rgba(255, 160, 70, 1),
+      0 0 16px rgba(255, 140, 60, 0.6);
+  }
+}
+
+/* Strike attack glow effect */
+.aggressive-glow {
+  animation: strikeGlow 1.5s ease-out;
+}
+
+@keyframes strikeGlow {
+  0% { 
+    box-shadow: 0 0 0 rgba(255, 50, 50, 0);
+    filter: brightness(1);
+  }
+  30% { 
+    box-shadow: 0 0 20px 5px rgba(255, 50, 50, 0.8);
+    filter: brightness(1.3);
+  }
+  100% { 
+    box-shadow: 0 0 0 rgba(255, 50, 50, 0);
+    filter: brightness(1);
+  }
+}
+
+/* Action-specific styles for new commands */
+.action-aggressive .player-avatar {
+  filter: brightness(1.2) contrast(1.1) hue-rotate(10deg);
+}
+
+.action-burst .player-avatar {
+  filter: brightness(1.4) contrast(1.2) saturate(1.3);
+  animation: burstAttackGlow 1s ease-out;
+}
+
+@keyframes burstAttackGlow {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 165, 0, 0);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 15px 3px rgba(255, 165, 0, 0.7);
+  }
+}
+
+.action-aggressive .player-last-action {
+  background: linear-gradient(135deg, #ff4444, #cc2222);
+  color: white;
+}
+
+.action-burst .player-last-action {
+  background: linear-gradient(135deg, #ff6600, #ff9900);
+  color: white;
+  font-weight: bold;
+}
+
+/* Burst attack particles and effects */
+.burst-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: visible;
+}
+
+.burst-wave {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border: 3px solid #ff6600;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: burstWaveExpand 1.5s ease-out forwards;
+}
+
+@keyframes burstWaveExpand {
+  0% {
+    width: 10px;
+    height: 10px;
+    opacity: 1;
+    border-color: #ff6600;
+  }
+  50% {
+    border-color: #ffaa00;
+    opacity: 0.8;
+  }
+  100% {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+    border-color: #ffcc00;
+  }
+}
+
+.burst-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, #ff6600, #ff9900);
+  border-radius: 50%;
+  animation: burstSparkFly 1.2s ease-out forwards;
+}
+
+@keyframes burstSparkFly {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+    box-shadow: 0 0 6px #ff6600;
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(calc(var(--tx) * 0.7), calc(var(--ty) * 0.7)) scale(1.2);
+    box-shadow: 0 0 8px #ffaa00;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(0.3);
+    opacity: 0;
+    box-shadow: 0 0 4px #ffcc00;
+  }
+}
+
+/* Burst flash effect */
+.fx-flash.burst {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, 
+    rgba(255, 102, 0, 0.9) 0%, 
+    rgba(255, 153, 0, 0.7) 25%, 
+    rgba(255, 204, 0, 0.4) 50%, 
+    transparent 75%);
+  animation: burstFlash 1.8s ease-out forwards;
+  mix-blend-mode: screen;
+  z-index: 40;
+}
+
+@keyframes burstFlash {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  45% {
+    opacity: 0.9;
+    transform: scale(2.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(4);
+  }
+}
+
+/* Enhanced Burst Card Animation System */
+.burst-anim-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.burst-attack-card {
+  position: absolute;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+.burst-card-container {
+  animation: burstCardGlow 0.5s ease-in-out infinite alternate;
+}
+
+/* Burst card animations */
+@keyframes burstCardSlideIn {
+  0% {
+    left: -500px;
+    transform: translateY(-50%) scale(0.9) rotate(-10deg);
+    opacity: 0.9;
+  }
+  40% {
+    left: 15%;
+    transform: translateY(-50%) scale(1) rotate(3deg);
+    opacity: 1;
+  }
+  100% {
+    left: 20%;
+    transform: translateY(-50%) scale(1.02) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes burstCardAttack {
+  0% {
+    transform: translateY(-50%) scale(1.02) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-50%) scale(1.08) rotate(-3deg);
+  }
+  40% {
+    transform: translateY(-50%) scale(1.15) rotate(5deg);
+  }
+  60% {
+    transform: translateY(-50%) scale(1.12) rotate(-2deg);
+  }
+  80% {
+    transform: translateY(-50%) scale(1.06) rotate(1deg);
+  }
+  100% {
+    transform: translateY(-50%) scale(1.04) rotate(0deg);
+  }
+}
+
+@keyframes burstCardDissolve {
+  0% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1.04);
+  }
+  30% {
+    opacity: 0.9;
+    transform: translateY(-50%) scale(1.08);
+  }
+  70% {
+    opacity: 0.4;
+    transform: translateY(-50%) scale(0.95) rotate(8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.8) rotate(15deg);
+  }
+}
+
+@keyframes burstCardGlow {
+  0% {
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.95), inset 0 0 25px rgba(255, 255, 255, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 70px rgba(255, 215, 0, 1), inset 0 0 35px rgba(255, 255, 255, 0.6);
+  }
+}
+
+@keyframes burstCardPulse {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.01);
+  }
+}
+
+@keyframes burstEnergyRing {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 1;
+    border-color: rgba(255, 215, 0, 0.9);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.7;
+    border-color: rgba(255, 255, 255, 0.7);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0;
+    border-color: rgba(255, 215, 0, 0.3);
+  }
+}
+
+/* Speed line animations for movement effect */
+@keyframes burstSpeedLine {
+  0% {
+    left: -10px;
+    opacity: 0;
+    transform: scaleX(0.5);
+  }
+  30% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    left: 120%;
+    opacity: 0;
+    transform: scaleX(0.8);
+  }
+}
+
+/* Impact flash animation */
+@keyframes burstImpactFlash {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* Responsive adjustments for burst cards */
+@media (max-width: 1200px) {
+  .burst-attack-card {
+    width: 380px !important;
+    height: 500px !important;
+  }
+  
+  .burst-card-name {
+    font-size: 20px !important;
+  }
+  
+  @keyframes burstCardSlideIn {
+    0% {
+      left: -380px;
+      transform: translateY(-50%) scale(0.9) rotate(-10deg);
+    }
+    40% {
+      left: 10%;
+      transform: translateY(-50%) scale(1) rotate(3deg);
+    }
+    100% {
+      left: 15%;
+      transform: translateY(-50%) scale(1.02) rotate(0deg);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .burst-attack-card {
+    width: 300px !important;
+    height: 400px !important;
+  }
+  
+  .burst-card-name {
+    font-size: 18px !important;
+  }
+  
+  @keyframes burstCardSlideIn {
+    0% {
+      left: -300px;
+      transform: translateY(-50%) scale(0.9) rotate(-10deg);
+    }
+    40% {
+      left: 5%;
+      transform: translateY(-50%) scale(1) rotate(3deg);
+    }
+    100% {
+      left: 10%;
+      transform: translateY(-50%) scale(1.02) rotate(0deg);
+    }
+  }
+}
