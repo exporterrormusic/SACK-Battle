@@ -75,6 +75,9 @@ src/assets-original/
 *.psd
 game-settings.json
 
+# Template folder (development/reference only)
+template/
+
 # Batch files (automation scripts)
 *.bat
 

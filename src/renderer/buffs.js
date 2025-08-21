@@ -42,20 +42,8 @@ function _buffEnsureLayer(){
 }
 function _buffPreloadAudio(folder){
   if (_BUFF_AUDIO_CACHE[folder]) return _BUFF_AUDIO_CACHE[folder];
-  let aud;
   const src = `app://assets/powers/${folder}/burst.mp3`;
-  if (window.SackBattle?.utils?.audio) {
-    aud = window.SackBattle.utils.audio.createAudio(src, 'sfx', 0.9);
-  } else {
-    aud = new Audio(src);
-    aud.loop = false;
-    // Use AudioMixer for volume instead of hardcoded value
-    if (window.__audioMixer) {
-      aud.volume = window.__audioMixer.calculateCategoryVolume('sfx');
-    } else {
-      aud.volume = 0.9; // Fallback if AudioMixer not available
-    }
-  }
+  const aud = createAudioWithVolume(src, 'sfx', 0.9);
   aud.preload='auto'; 
   aud.loop=false; 
   _BUFF_AUDIO_CACHE[folder]=aud; 

@@ -17,17 +17,16 @@
   transition: opacity 0.8s ease;
 }
 
+/* Hidden state */
+#welcome-screen.waiting-hidden {
+  display: none !important;
+}
+
+/* Active state overrides hidden */
 #welcome-screen.active {
+  display: flex !important;
   opacity: 1;
   pointer-events: auto;
-}
-
-.waiting-hidden {
-  display: none;
-}
-
-#welcome-screen.active.waiting-hidden {
-  display: flex;
 }
 
 #welcome-screen .waiting-bg {

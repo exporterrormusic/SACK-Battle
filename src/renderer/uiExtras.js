@@ -1,7 +1,138 @@
 // uiExtras.js - rules toggle, reveal buttons, scaling
-(function(global){ function rules(){ const t=document.getElementById('rules-toggle'); const c=document.getElementById('rules-collapsible'); if(t&&c&&!t._wired){ t._wired=true; t.addEventListener('click',()=>{ const exp=t.getAttribute('aria-expanded')==='true'; if(exp){ t.setAttribute('aria-expanded','false'); c.classList.add('rules-collapsed'); } else { t.setAttribute('aria-expanded','true'); c.classList.remove('rules-collapsed'); } }); } document.querySelectorAll('.reveal-btn').forEach(btn=>{ if(btn._wired) return; btn._wired=true; btn.addEventListener('click',()=>{ const id=btn.getAttribute('data-target'); const input=document.getElementById(id); if(!input) return; if(input.type==='password'){ input.type='text'; btn.textContent='🙈'; } else { input.type='password'; btn.textContent='👁'; } }); }); }
-  function applyScale(){ const baseW=1280, baseH=880; let s=Math.min(window.innerWidth/baseW*0.95, window.innerHeight/baseH*1.05); s=Math.max(0.75, Math.min(1.55,s)); document.documentElement.style.setProperty('--ui-scale', s.toFixed(3)); const ov=document.getElementById('boss-overlay'); if(ov){ ov.style.transform=`scale(${s})`; ov.style.transformOrigin='top center'; fit(); } }
-  function fit(){ const ov=document.getElementById('boss-overlay'); const parent=document.getElementById('boss-container'); if(!ov||!parent) return; const pr=parent.getBoundingClientRect(); let cur=1; const m=ov.style.transform.match(/scale\(([^)]+)\)/); if(m) cur=parseFloat(m[1])||1; let safe=24; while(safe-- >0){ const r=ov.getBoundingClientRect(); if(r.bottom<=pr.bottom-6 && r.right<=pr.right-6) break; cur-=0.04; if(cur<0.6){ cur=0.6; break; } ov.style.transform=`scale(${cur.toFixed(3)})`; } }
-  function init(){ rules(); applyScale(); window.addEventListener('resize', applyScale); }
-  document.addEventListener('DOMContentLoaded', init);
-})(typeof window!=='undefined'?window:globalThis);
+(function(global) {
+  function rules() {
+    const rulesToggle = global.__domUtils.getElement('rules-toggle');
+    const rulesCollapsible = global.__domUtils.getElement('rules-collapsible');
+    
+    if (rulesToggle && rulesCollapsible && !rulesToggle._wired) {
+      rulesToggle._wired = true;
+      
+      // Enhanced rules toggle with memory management
+      global.__domUtils.addEventHandler(rulesToggle, 'click', () => {
+        const expanded = rulesToggle.getAttribute('aria-expanded') === 'true';
+        if (expanded) {
+          rulesToggle.setAttribute('aria-expanded', 'false');
+          rulesCollapsible.classList.add('rules-collapsed');
+        } else {
+          rulesToggle.setAttribute('aria-expanded', 'true');
+          rulesCollapsible.classList.remove('rules-collapsed');
+        }
+      }, 'ui-extras-rules-toggle');
+    }
+    
+    // Enhanced reveal buttons with memory management
+    console.log('[UIExtras] Setting up reveal buttons, found:', document.querySelectorAll('.reveal-btn').length);
+    document.querySelectorAll('.reveal-btn').forEach((btn, index) => {
+      if (btn._wired) return;
+      btn._wired = true;
+      
+      const clickHandler = () => {
+        const targetId = btn.getAttribute('data-target');
+        console.log('[UIExtras] Reveal button clicked, target:', targetId);
+        const input = global.__domUtils ? global.__domUtils.getElement(targetId) : document.getElementById(targetId);
+        if (!input) {
+          console.warn('[UIExtras] Target input not found:', targetId);
+          return;
+        }
+        
+        if (input.type === 'password') {
+          input.type = 'text';
+          btn.textContent = '🙈';
+        } else {
+          input.type = 'password';
+          btn.textContent = '👁';
+        }
+      };
+      
+      if (global.__domUtils && global.__domUtils.addEventHandler) {
+        global.__domUtils.addEventHandler(btn, 'click', clickHandler, `ui-extras-reveal-btn-${index}`);
+      } else {
+        btn.addEventListener('click', clickHandler);
+      }
+    });
+  }
+
+  function applyScale() {
+    const baseWidth = 1280, baseHeight = 880;
+    let scale = Math.min(window.innerWidth / baseWidth * 0.95, window.innerHeight / baseHeight * 1.05);
+    scale = Math.max(0.75, Math.min(1.55, scale));
+    
+    document.documentElement.style.setProperty('--ui-scale', scale.toFixed(3));
+    
+    const overlay = global.__domUtils.getElement('boss-overlay');
+    if (overlay) {
+      overlay.style.transform = `scale(${scale})`;
+      overlay.style.transformOrigin = 'top center';
+      fitOverlay();
+    }
+  }
+
+  function fitOverlay() {
+    const overlay = global.__domUtils.getElement('boss-overlay');
+    const parent = global.__domUtils.getElement('boss-container');
+    if (!overlay || !parent) return;
+    
+    const parentRect = parent.getBoundingClientRect();
+    let currentScale = 1;
+    const scaleMatch = overlay.style.transform.match(/scale\(([^)]+)\)/);
+    if (scaleMatch) currentScale = parseFloat(scaleMatch[1]) || 1;
+    
+    let safetyCounter = 24;
+    while (safetyCounter-- > 0) {
+      const overlayRect = overlay.getBoundingClientRect();
+      if (overlayRect.bottom <= parentRect.bottom - 6 && overlayRect.right <= parentRect.right - 6) {
+        break;
+      }
+      currentScale -= 0.04;
+      if (currentScale < 0.6) {
+        currentScale = 0.6;
+        break;
+      }
+      overlay.style.transform = `scale(${currentScale.toFixed(3)})`;
+    }
+  }
+
+  function init() {
+    console.log('[UIExtras] Initializing, domUtils available:', !!global.__domUtils);
+    rules();
+    applyScale();
+    // Enhanced window resize with memory management
+    if (global.__domUtils && global.__domUtils.addEventHandler) {
+      global.__domUtils.addEventHandler(window, 'resize', applyScale, 'ui-extras-resize');
+    } else {
+      window.addEventListener('resize', applyScale);
+    }
+  }
+
+  // Enhanced DOMContentLoaded with memory management
+  function initializeUIExtras() {
+    if (global.__domUtils && global.__domUtils.wireOnceEnhanced) {
+      global.__domUtils.wireOnceEnhanced(document, 'DOMContentLoaded', init, 'ui-extras-init');
+    } else {
+      // Fallback if domUtils isn't ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        // DOM already loaded
+        setTimeout(init, 100);
+      }
+    }
+  }
+
+  // Initialize immediately or wait for domUtils
+  if (global.__domUtils) {
+    initializeUIExtras();
+  } else {
+    // Wait a bit for domUtils to load
+    setTimeout(initializeUIExtras, 100);
+  }
+  
+  // Additional fallback - ensure reveal buttons work even if timing is off
+  setTimeout(() => {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      console.log('[UIExtras] Fallback initialization check');
+      rules(); // Re-run reveal button setup
+    }
+  }, 500);
+
+})(typeof window !== 'undefined' ? window : globalThis);

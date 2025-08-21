@@ -8,15 +8,15 @@ const CH = require('./src/core/ipcChannels');
 const logger = require('./src/core/logger');
 // (Legacy Helix helpers now handled inside TwitchService – no direct imports needed here)
 // New unified Twitch service façade
-const { TwitchService } = require('./src/twitch/service');
+const { TwitchService } = require('./src/platforms/twitch/service');
 let twitchService = null;
 
 // YouTube service integration
-const { YouTubeService } = require('./src/youtube/service');
+const { YouTubeService } = require('./src/platforms/youtube/service');
 let youtubeService = null;
 
 // Discord service integration
-const { DiscordService } = require('./src/discord/service');
+const { DiscordService } = require('./src/platforms/discord/service');
 let discordService = null;
 
 // Backend server management
@@ -42,14 +42,27 @@ function startBackendServer() {
   
   console.log('[Backend] Starting Twitch Extension backend server...');
   
+  // Read settings to get the extension secret
+  let extensionSecret = 'RwPB2n9fjCijFazWu5XoMD6HJZOn4GDxf7GQ2/WgvwY='; // Your provided secret
+  try {
+    const settings = readSettingsFile();
+    if (settings && settings.twitchExtension && settings.twitchExtension.secret) {
+      extensionSecret = settings.twitchExtension.secret;
+      console.log('[Backend] Using extension secret from settings');
+    } else {
+      console.log('[Backend] Using provided extension secret');
+    }
+  } catch (error) {
+    console.warn('[Backend] Error reading settings for extension secret, using provided secret:', error);
+  }
+  
   // Set environment variables for the backend
   const env = {
     ...process.env,
     NODE_ENV: 'development',
     PORT: '3000',
     GAME_SERVER_PORT: '3001',
-    // Use a default test secret if none provided
-    TWITCH_EXT_SECRET: process.env.TWITCH_EXT_SECRET || 'test-secret-for-development'
+    TWITCH_EXT_SECRET: extensionSecret
   };
   
   try {
@@ -525,14 +538,14 @@ ipcMain.handle(CH.YOUTUBE_HEALTH, async () => {
 ipcMain.handle(CH.YOUTUBE_VALIDATE_KEY, async (event, apiKey) => {
   console.log('[YouTube] API Key validation request:', { hasKey: !!apiKey, keyLength: apiKey?.length });
   try {
-    const { validateApiKey } = require('./src/youtube/index');
+    const { validateApiKey } = require('./src/platforms/youtube/index');
     console.log('[YouTube] Calling validateApiKey...');
     const result = await validateApiKey(apiKey);
     console.log('[YouTube] validateApiKey result:', result);
-    return true;
+    return { success: true, data: result };
   } catch (e) {
     console.error('[YouTube] API Key validation error:', e.message, e.stack);
-    return { error: e.message };
+    return { success: false, error: e.message };
   }
 });
 
@@ -545,14 +558,14 @@ ipcMain.handle('test-youtube-ipc', async () => {
 ipcMain.handle(CH.YOUTUBE_GET_CHANNEL_INFO, async (event, { channelId, apiKey }) => {
   console.log('[YouTube] Channel info request:', { hasChannelId: !!channelId, hasApiKey: !!apiKey });
   try {
-    const { getChannelInfo } = require('./src/youtube/index');
+    const { getChannelInfo } = require('./src/platforms/youtube/index');
     console.log('[YouTube] Calling getChannelInfo...');
     const channelInfo = await getChannelInfo(channelId, apiKey);
     console.log('[YouTube] getChannelInfo result:', channelInfo);
-    return channelInfo;
+    return { success: true, data: channelInfo };
   } catch (e) {
     console.error('[YouTube] Channel info error:', e.message, e.stack);
-    return { error: e.message };
+    return { success: false, error: e.message };
   }
 });
 
@@ -587,7 +600,7 @@ ipcMain.handle(CH.DISCORD_HEALTH, async () => {
 ipcMain.handle(CH.DISCORD_VALIDATE_TOKEN, async (event, token) => {
   console.log('[Discord] Token validation request:', { hasToken: !!token, tokenLength: token?.length });
   try {
-    const { validateBotToken } = require('./src/discord/index');
+    const { validateBotToken } = require('./src/platforms/discord/index');
     console.log('[Discord] Calling validateBotToken...');
     const result = await validateBotToken(token);
     console.log('[Discord] validateBotToken result:', result);
@@ -601,7 +614,7 @@ ipcMain.handle(CH.DISCORD_VALIDATE_TOKEN, async (event, token) => {
 ipcMain.handle(CH.DISCORD_GET_CHANNEL_INFO, async (event, { channelId, token }) => {
   console.log('[Discord] Channel info request:', { hasChannelId: !!channelId, hasToken: !!token });
   try {
-    const { getChannelInfo } = require('./src/discord/index');
+    const { getChannelInfo } = require('./src/platforms/discord/index');
     console.log('[Discord] Calling getChannelInfo...');
     const channelInfo = await getChannelInfo(channelId, token);
     console.log('[Discord] getChannelInfo result:', channelInfo);

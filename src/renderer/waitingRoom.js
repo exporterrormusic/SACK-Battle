@@ -1,6 +1,8 @@
 // src/renderer/waitingRoom.js
-import { stopAllAudio } from './audioUtils.js';
-// Waiting room & pre-battle overlay module (ES module refactor)
+// Waiting room & pre-battle overlay module (converted back to regular script)
+
+(function() {
+'use strict';
 
 const global = typeof window !== 'undefined' ? window : globalThis;
 const audio = global.__audioModule;
@@ -67,7 +69,11 @@ let waitingActive = false; // exported via global.waitingActive for legacy code
       try { const Game = global.Game; if (Game && Game.pause && Game.getState().running) Game.pause(); } catch(_){ }
       setWaiting._prevMusic = { overlay: (overlayMusic && overlayMusic.type) || null, boss: (bossAudio.music ? bossAudio.music : null) };
       // Stop previous music BEFORE creating and playing waiting.mp3
-      stopAllAudio({ overlayMusic, bossAudio, setWaiting }, 'waitingRoom:setWaiting(true)');
+      try {
+        if (overlayMusic && overlayMusic.audio){ try { overlayMusic.audio.pause(); } catch(_){} }
+        if (bossAudio && bossAudio.music){ try { bossAudio.music.pause(); } catch(_){} }
+        console.log('[AudioStopAll] waitingRoom:setWaiting(true)');
+      } catch(e){ console.warn('[AudioStopAll] error', e); }
       // Delay creation and playback to avoid race with other music stops
       setTimeout(() => {
           if (!setWaiting._waitingAudio) {
@@ -181,7 +187,8 @@ let waitingActive = false; // exported via global.waitingActive for legacy code
       battleEl.style.letterSpacing = Math.max(0, bs - 0.2) + 'px';
     }
   }
-  window.addEventListener('resize', ()=> adjustPrebattleLines());
+  // Enhanced window resize handler
+  global.__domUtils.addEventHandler(window, 'resize', adjustPrebattleLines, 'waiting-room-resize');
 
   function showInitialPrebattle(){
     if (global.__suppressPrebattle) { console.log('[Prebattle] Suppressed (flag)'); return; }
@@ -229,12 +236,13 @@ let waitingActive = false; // exported via global.waitingActive for legacy code
       global.__suppressPrebattle = false;
       launchPrebattleOnce();
       global.__suppressPrebattle = prevSuppress; // restore
-      document.removeEventListener('click', dismissWaiting, true);
-      waitingEl.removeEventListener('click', dismissWaiting, true);
+      global.__domUtils.removeEventHandler('waiting-room-document-click');
+      global.__domUtils.removeEventHandler('waiting-room-element-click');
       wireWaitingDismiss._wired = false; // Allow re-wiring after reset
     }
-    document.addEventListener('click', dismissWaiting, true);
-    waitingEl.addEventListener('click', dismissWaiting, true);
+    // Enhanced waiting room event handlers with memory management
+    global.__domUtils.addEventHandler(document, 'click', dismissWaiting, 'waiting-room-document-click', { capture: true });
+    global.__domUtils.addEventHandler(waitingEl, 'click', dismissWaiting, 'waiting-room-element-click', { capture: true });
   }
 
   function initialShow(){
@@ -246,13 +254,35 @@ let waitingActive = false; // exported via global.waitingActive for legacy code
     // Remove redundant timeouts
     wireWaitingDismiss();
   }
-export { rebuildWaitingRoom, setWaiting, initWaitingAssets, showInitialPrebattle, adjustPrebattleLines, wireWaitingDismiss };
-global.__waitingRoom = { rebuildWaitingRoom, setWaiting, initWaitingAssets, showInitialPrebattle, adjustPrebattleLines, isActive:()=>waitingActive, wireWaitingDismiss };
+// Global exports
+global.__waitingRoom = { rebuildWaitingRoom, setWaiting, initWaitingAssets, showInitialPrebattle, adjustPrebattleLines, isActive:()=>waitingActive, wireWaitingDismiss, initialShow };
 global.setWaiting = setWaiting;
 global.rebuildWaitingRoom = rebuildWaitingRoom;
 global.showInitialPrebattle = showInitialPrebattle;
 global.initWaitingAssets = initWaitingAssets;
 global.wireWaitingDismiss = wireWaitingDismiss;
-document.addEventListener('DOMContentLoaded', () => {
-  initialShow();
-});
+
+// Ensure domUtils is available before wiring
+function initializeWaitingRoom() {
+  if (global.__domUtils && global.__domUtils.wireOnceEnhanced) {
+    global.__domUtils.wireOnceEnhanced(document, 'DOMContentLoaded', initialShow, 'waiting-room-init');
+  } else {
+    // Fallback if domUtils isn't ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initialShow);
+    } else {
+      // DOM already loaded
+      setTimeout(initialShow, 100);
+    }
+  }
+}
+
+// Initialize immediately or wait for domUtils
+if (global.__domUtils) {
+  initializeWaitingRoom();
+} else {
+  // Wait a bit for domUtils to load
+  setTimeout(initializeWaitingRoom, 100);
+}
+
+})(); // End IIFE

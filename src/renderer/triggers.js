@@ -71,9 +71,16 @@
         window.Game.setSettings({ ...window.Game.getState().settings, channelPointTriggers: current });
         persist();
       } catch(_){} }, 220); }; })();
-      rewardInput.addEventListener('input', schedulePersist);
-      effectSel.addEventListener('change', schedulePersist);
-      enableChk.addEventListener('change', schedulePersist);
+      // Enhanced event handlers with memory management
+      const handlers = [
+        { element: rewardInput, event: 'input', handler: schedulePersist },
+        { element: effectSel, event: 'change', handler: schedulePersist },
+        { element: enableChk, event: 'change', handler: schedulePersist }
+      ];
+      
+      handlers.forEach(({ element, event, handler }, index) => {
+        global.__domUtils.addEventHandler(element, event, handler, `triggers-reward-${idx}-${index}`);
+      });
     });
   }
   function renderBitsThresholds(){
@@ -99,9 +106,16 @@
         window.Game.setSettings({ ...window.Game.getState().settings, bitsThresholds: current.sort((a,b)=>a.minBits-b.minBits) });
         persist();
       } catch(_){} }, 220); }; })();
-      bitsInput.addEventListener('input', schedulePersist);
-      effectSel.addEventListener('change', schedulePersist);
-      enableChk.addEventListener('change', schedulePersist);
+      // Enhanced bits threshold event handlers  
+      const handlers = [
+        { element: bitsInput, event: 'input', handler: schedulePersist },
+        { element: effectSel, event: 'change', handler: schedulePersist },
+        { element: enableChk, event: 'change', handler: schedulePersist }
+      ];
+      
+      handlers.forEach(({ element, event, handler }, index) => {
+        global.__domUtils.addEventHandler(element, event, handler, `triggers-bits-${idx}-${index}`);
+      });
     });
   }
   function addTriggerButtons(){
@@ -109,7 +123,8 @@
     const addRewardBtn=document.getElementById('btn-add-reward');
     if (addRewardBtn && !addRewardBtn._wired){ 
       addRewardBtn._wired=true; 
-      addRewardBtn.addEventListener('click',()=>{ 
+      // Enhanced add reward button handler
+      global.__domUtils.addEventHandler(addRewardBtn, 'click', () => {
         try { 
           const matchInput = document.getElementById('new-reward-match');
           const effectSelect = document.getElementById('new-reward-effect');
@@ -132,14 +147,15 @@
           matchInput.value = '';
           effectSelect.selectedIndex = 0;
         } catch(e){ console.warn('[Triggers] add reward failed', e); } 
-      }); 
+      }, 'triggers-add-reward'); 
     }
     
     // Bits
     const addBitsBtn=document.getElementById('btn-add-bits-threshold');
     if (addBitsBtn && !addBitsBtn._wired){ 
       addBitsBtn._wired=true; 
-      addBitsBtn.addEventListener('click',()=>{ 
+      // Enhanced add bits button handler
+      global.__domUtils.addEventHandler(addBitsBtn, 'click', () => {
         try { 
           const amountInput = document.getElementById('new-bits-amount');
           const effectSelect = document.getElementById('new-bits-effect');
@@ -162,14 +178,15 @@
           amountInput.value = '';
           effectSelect.selectedIndex = 0;
         } catch(e){ console.warn('[Triggers] add bits failed', e); } 
-      }); 
+      }, 'triggers-add-bits'); 
     }
     
     // SuperChats
     const addSuperchatBtn=document.getElementById('btn-add-superchat');
     if (addSuperchatBtn && !addSuperchatBtn._wired){ 
       addSuperchatBtn._wired=true; 
-      addSuperchatBtn.addEventListener('click',()=>{ 
+      // Enhanced add superchat button handler
+      global.__domUtils.addEventHandler(addSuperchatBtn, 'click', () => {
         try { 
           const amountInput = document.getElementById('new-superchat-amount');
           const effectSelect = document.getElementById('new-superchat-effect');
@@ -192,7 +209,7 @@
           amountInput.value = '';
           effectSelect.selectedIndex = 0;
         } catch(e){ console.warn('[Triggers] add superchat failed', e); } 
-      }); 
+      }, 'triggers-add-superchat'); 
     }
   }
   function renderSuperchatThresholds(){
@@ -218,16 +235,24 @@
         window.Game.setSettings({ ...window.Game.getState().settings, superchatThresholds: current.sort((a,b)=>a.minAmount-b.minAmount) });
         persist();
       } catch(_){} }, 220); }; })();
-      amountInput.addEventListener('input', schedulePersist);
-      effectSel.addEventListener('change', schedulePersist);
-      enableChk.addEventListener('change', schedulePersist);
+      // Enhanced superchat event handlers
+      const handlers = [
+        { element: amountInput, event: 'input', handler: schedulePersist },
+        { element: effectSel, event: 'change', handler: schedulePersist },
+        { element: enableChk, event: 'change', handler: schedulePersist }
+      ];
+      
+      handlers.forEach(({ element, event, handler }, index) => {
+        global.__domUtils.addEventHandler(element, event, handler, `triggers-superchat-${idx}-${index}`);
+      });
     });
   }
   function initTriggers(){ renderRewardTriggers(); renderBitsThresholds(); renderSuperchatThresholds(); addTriggerButtons(); }
   window.renderRewardTriggers = renderRewardTriggers;
   window.renderBitsThresholds = renderBitsThresholds;
   window.renderSuperchatThresholds = renderSuperchatThresholds;
-  document.addEventListener('DOMContentLoaded', ()=>{ initTriggers(); });
+  // Enhanced DOMContentLoaded with memory management
+  global.__domUtils.wireOnceEnhanced(document, 'DOMContentLoaded', initTriggers, 'triggers-init');
 })();
 
 // Simulate a bits event for testing bits triggers without spending real bits

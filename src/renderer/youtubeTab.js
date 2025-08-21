@@ -29,8 +29,7 @@
           const result = await global.electronAPI.connectYouTube(settings.youtubeApiKey, settings.youtubeChannelId);
           if (result) {
             console.log('[YouTubeTab] Auto-connect successful');
-            const statusEl = document.getElementById('youtube-status');
-            if (statusEl) statusEl.textContent = 'Connected';
+            updateConnectionStatus('connected', 'Auto-connected to YouTube');
           }
         } catch (error) {
           console.warn('[YouTubeTab] Auto-connect failed:', error);
@@ -41,193 +40,232 @@
     }
   }
 
-  // Wire up YouTube tab button functionality
-  function wireYouTubeTab() {
-    console.log('[YouTubeTab] Wiring YouTube tab buttons...');
-
-    // Validate API Key button
-    const validateKeyBtn = document.getElementById('youtube-validate-key');
-    if (validateKeyBtn) {
-      validateKeyBtn.addEventListener('click', async () => {
-        const apiKeyInput = document.getElementById('youtube-api-key');
-        const apiKey = apiKeyInput?.value?.trim();
-        
-        if (!apiKey) {
-          alert('Please enter a YouTube API key first.');
-          return;
-        }
-
-        try {
-          validateKeyBtn.disabled = true;
-          validateKeyBtn.textContent = 'Validating...';
-          
-          const isValid = await global.electronAPI.validateYouTubeKey(apiKey);
-          if (isValid) {
-            validateKeyBtn.textContent = 'Valid ✓';
-            validateKeyBtn.style.backgroundColor = '#10b981';
-            setTimeout(() => {
-              validateKeyBtn.textContent = 'Validate Key';
-              validateKeyBtn.style.backgroundColor = '';
-              validateKeyBtn.disabled = false;
-            }, 2000);
-          } else {
-            throw new Error('Invalid API key');
-          }
-        } catch (error) {
-          console.error('[YouTubeTab] API key validation failed:', error);
-          validateKeyBtn.textContent = 'Invalid ✗';
-          validateKeyBtn.style.backgroundColor = '#ef4444';
-          setTimeout(() => {
-            validateKeyBtn.textContent = 'Validate Key';
-            validateKeyBtn.style.backgroundColor = '';
-            validateKeyBtn.disabled = false;
-          }, 2000);
-        }
-      });
-    }
-
-    // Get Channel Info button
-    const getChannelInfoBtn = document.getElementById('youtube-get-channel-info');
-    if (getChannelInfoBtn) {
-      getChannelInfoBtn.addEventListener('click', async () => {
-        const apiKeyInput = document.getElementById('youtube-api-key');
-        const channelIdInput = document.getElementById('youtube-channel-id');
-        const apiKey = apiKeyInput?.value?.trim();
-        const channelId = channelIdInput?.value?.trim();
-        
-        if (!apiKey || !channelId) {
-          alert('Please enter both API key and Channel ID first.');
-          return;
-        }
-
-        try {
-          getChannelInfoBtn.disabled = true;
-          getChannelInfoBtn.textContent = 'Getting Info...';
-          
-          const channelInfo = await global.electronAPI.getYouTubeChannelInfo(channelId, apiKey);
-          console.log('[YouTubeTab] Channel info response:', channelInfo);
-          
-          if (channelInfo && !channelInfo.error) {
-            const infoDiv = document.getElementById('youtube-channel-info');
-            const detailsDiv = document.getElementById('youtube-channel-details');
-            
-            if (infoDiv && detailsDiv) {
-              // Extract data from YouTube API response structure
-              const snippet = channelInfo.snippet || {};
-              const statistics = channelInfo.statistics || {};
-              
-              detailsDiv.innerHTML = `
-                <p><strong>Channel:</strong> ${snippet.title || 'Unknown'}</p>
-                <p><strong>Subscriber Count:</strong> ${statistics.subscriberCount || 'Hidden'}</p>
-                <p><strong>Video Count:</strong> ${statistics.videoCount || 'Unknown'}</p>
-                <p><strong>View Count:</strong> ${statistics.viewCount || 'Unknown'}</p>
-              `;
-              infoDiv.style.display = 'block';
-            }
-            
-            getChannelInfoBtn.textContent = 'Success ✓';
-            getChannelInfoBtn.style.backgroundColor = '#10b981';
-          }
-        } catch (error) {
-          console.error('[YouTubeTab] Channel info failed:', error);
-          
-          // Show specific error message if available
-          let errorMessage = 'Failed to get channel information. Please check your API key and Channel ID.';
-          if (error.message) {
-            errorMessage += '\n\nError: ' + error.message;
-          }
-          
-          alert(errorMessage);
-          getChannelInfoBtn.textContent = 'Failed ✗';
-          getChannelInfoBtn.style.backgroundColor = '#ef4444';
-        }
-        
-        setTimeout(() => {
-          getChannelInfoBtn.textContent = 'Get Channel Info';
-          getChannelInfoBtn.style.backgroundColor = '';
-          getChannelInfoBtn.disabled = false;
-        }, 2000);
-      });
-    }
-
-    // Connect button
-    const connectBtn = document.getElementById('youtube-connect');
-    if (connectBtn) {
-      connectBtn.addEventListener('click', async () => {
-        const apiKeyInput = document.getElementById('youtube-api-key');
-        const channelIdInput = document.getElementById('youtube-channel-id');
-        const apiKey = apiKeyInput?.value?.trim();
-        const channelId = channelIdInput?.value?.trim();
-        
-        if (!apiKey || !channelId) {
-          alert('Please enter both API key and Channel ID first.');
-          return;
-        }
-
-        try {
-          connectBtn.disabled = true;
-          connectBtn.textContent = 'Connecting...';
-          
-          const result = await global.electronAPI.connectYouTube(apiKey, channelId);
-          if (result) {
-            connectBtn.style.display = 'none';
-            const disconnectBtn = document.getElementById('youtube-disconnect');
-            if (disconnectBtn) disconnectBtn.style.display = 'inline-block';
-            
-            const statusEl = document.getElementById('youtube-status');
-            if (statusEl) statusEl.textContent = 'Connected';
-            
-            console.log('[YouTubeTab] Connected successfully');
-          }
-        } catch (error) {
-          console.error('[YouTubeTab] Connection failed:', error);
-          alert('Failed to connect to YouTube. Please check your credentials.');
-          connectBtn.textContent = 'Connect to YouTube';
-          connectBtn.disabled = false;
-        }
-      });
-    }
-
-    // Disconnect button  
-    const disconnectBtn = document.getElementById('youtube-disconnect');
-    if (disconnectBtn) {
-      disconnectBtn.addEventListener('click', async () => {
-        try {
-          await global.electronAPI.disconnectYouTube();
-          
-          disconnectBtn.style.display = 'none';
-          connectBtn.style.display = 'inline-block';
-          connectBtn.disabled = false;
-          
-          const statusEl = document.getElementById('youtube-status');
-          if (statusEl) statusEl.textContent = 'Disconnected';
-          
-          console.log('[YouTubeTab] Disconnected successfully');
-        } catch (error) {
-          console.error('[YouTubeTab] Disconnect failed:', error);
-        }
-      });
-    }
-
-    // Enable/disable connect button based on input
-    const apiKeyInput = document.getElementById('youtube-api-key');
-    const channelIdInput = document.getElementById('youtube-channel-id');
+  // Update YouTube connection status and UI
+  function updateConnectionStatus(status, message = '') {
+    const statusElement = document.getElementById('youtube-status');
+    const connectBtn = document.getElementById('yt-connect-btn');
+    const disconnectBtn = document.getElementById('yt-disconnect-btn');
     
-    function updateConnectButton() {
-      if (connectBtn) {
-        const hasApiKey = apiKeyInput?.value?.trim();
-        const hasChannelId = channelIdInput?.value?.trim();
-        connectBtn.disabled = !(hasApiKey && hasChannelId);
+    if (statusElement) {
+      switch (status) {
+        case 'connected':
+          statusElement.textContent = '✅ Connected to YouTube';
+          statusElement.className = 'status-connected';
+          break;
+        case 'connecting':
+          statusElement.textContent = '🔄 Connecting to YouTube...';
+          statusElement.className = 'status-connecting';
+          break;
+        case 'disconnected':
+          statusElement.textContent = '❌ Disconnected';
+          statusElement.className = 'status-disconnected';
+          break;
+        case 'error':
+          statusElement.textContent = `❌ Error: ${message}`;
+          statusElement.className = 'status-error';
+          break;
       }
     }
     
-    if (apiKeyInput) apiKeyInput.addEventListener('input', updateConnectButton);
-    if (channelIdInput) channelIdInput.addEventListener('input', updateConnectButton);
+    if (connectBtn) {
+      connectBtn.style.display = (status === 'connected') ? 'none' : 'inline-block';
+    }
+    if (disconnectBtn) {
+      disconnectBtn.style.display = (status === 'connected') ? 'inline-block' : 'none';
+    }
+  }
+
+  // Show error message
+  function showError(message) {
+    updateConnectionStatus('error', message);
+    console.error('[YouTubeTab]', message);
+  }
+
+  // Show success message  
+  function showSuccess(message) {
+    updateConnectionStatus('connected', message);
+    console.log('[YouTubeTab]', message);
+  }
+
+  // Refresh connect button state
+  function refreshConnectButton() {
+    const apiKey = document.getElementById('yt-api-key')?.value?.trim();
+    const channelId = document.getElementById('yt-channel-id')?.value?.trim();
+    const connectBtn = document.getElementById('yt-connect-btn');
     
-    // Initial check
-    updateConnectButton();
+    if (connectBtn) {
+      connectBtn.disabled = !apiKey || !channelId;
+    }
+  }
+
+  // Update overall UI state
+  function updateUI() {
+    refreshConnectButton();
+    // Add any other UI updates here
+  }
+
+  // Check for auto-connect capability
+  function checkAutoConnect() {
+    // Auto-connect is handled by loadAndSetupAutoConnect
+    // This function exists for compatibility
+    console.log('[YouTubeTab] checkAutoConnect called - handled by loadAndSetupAutoConnect');
+  }
+
+  // Wire up YouTube tab button functionality
+  function wireEventHandlers() {
+    console.log('[YouTubeTab] wireEventHandlers');
     
-    console.log('[YouTubeTab] YouTube tab buttons wired successfully');
+    // Enhanced YouTube tab event management
+    const addManagedHandler = (elementId, event, handler) => {
+      const element = global.__domUtils.getElement(elementId);
+      if (element) {
+        global.__domUtils.addEventHandler(element, event, handler, `youtube-${elementId}-${event}`);
+      }
+    };
+
+    // Validation handler
+    addManagedHandler('youtube-validate-key', 'click', async () => {
+      const apiKey = document.getElementById('youtube-api-key').value.trim();
+      if (!apiKey) {
+        showError('API key is required');
+        return;
+      }
+      
+      const btn = document.getElementById('youtube-validate-key');
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Validating...';
+        
+        const response = await window.electronAPI.validateYouTubeKey(apiKey);
+        console.log('[YouTubeTab] validate_response', { success: response.success });
+        
+        if (response.success) {
+          // Show success message in an alert or console (don't change connection status)
+          alert('✅ API key is valid!');
+          console.log('[YouTubeTab] API key validation successful');
+        } else {
+          showError(response.error || 'Invalid API key');
+        }
+      } catch (error) {
+        console.error('[YouTubeTab] validate_error', { error: error.message });
+        showError(`Validation failed: ${error.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Validate API Key';
+      }
+    });
+
+    // Channel info handler
+    addManagedHandler('youtube-get-channel-info', 'click', async () => {
+      const apiKey = document.getElementById('youtube-api-key').value.trim();
+      const channelId = document.getElementById('youtube-channel-id').value.trim();
+      
+      if (!apiKey || !channelId) {
+        showError('Both API key and Channel ID are required');
+        return;
+      }
+      
+      const btn = document.getElementById('youtube-get-channel-info');
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Fetching...';
+        
+        const response = await window.electronAPI.getYouTubeChannelInfo(channelId, apiKey);
+        console.log('[YouTubeTab] channel_info_response', { success: response.success });
+        
+        if (response.success) {
+          const channelInfo = response.data;
+          // YouTube API returns channel data in snippet property
+          const snippet = channelInfo.snippet || {};
+          let message = `Channel: ${snippet.title || 'Unknown'}`;
+          if (snippet.customUrl) {
+            message += `\nCustom URL: ${snippet.customUrl}`;
+          }
+          // Add subscriber count if available
+          if (channelInfo.statistics && channelInfo.statistics.subscriberCount) {
+            message += `\nSubscribers: ${channelInfo.statistics.subscriberCount}`;
+          }
+          // Show channel info in an alert (don't change connection status)
+          alert('✅ Channel Info:\n\n' + message);
+          console.log('[YouTubeTab] Channel info retrieved:', channelInfo);
+        } else {
+          showError(response.error || 'Failed to fetch channel info');
+        }
+      } catch (error) {
+        console.error('[YouTubeTab] channel_info_error', { error: error.message });
+        showError(`Failed to fetch channel info: ${error.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Get Channel Info';
+      }
+    });
+
+    // Connect handler  
+    addManagedHandler('yt-connect-btn', 'click', async () => {
+      const apiKey = document.getElementById('yt-api-key').value.trim();
+      const channelId = document.getElementById('yt-channel-id').value.trim();
+      
+      if (!apiKey || !channelId) {
+        showError('Both API key and Channel ID are required');
+        return;
+      }
+      
+      const btn = document.getElementById('yt-connect-btn');
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Connecting...';
+        
+        const response = await window.__ipcRenderer.invoke('ipc-youtube-connect', { apiKey, channelId });
+        console.log('[YouTubeTab] connect_response', { success: response.success });
+        
+        if (response.success) {
+          updateConnectionStatus('connected', 'Connected to YouTube successfully!');
+          updateUI();
+        } else {
+          showError(response.error || 'Connection failed');
+        }
+      } catch (error) {
+        console.error('[YouTubeTab] connect_error', { error: error.message });
+        showError(`Connection failed: ${error.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Connect';
+      }
+    });
+
+    // Disconnect handler
+    addManagedHandler('yt-disconnect-btn', 'click', async () => {
+      const btn = document.getElementById('yt-disconnect-btn');
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Disconnecting...';
+        
+        const response = await window.__ipcRenderer.invoke('ipc-youtube-disconnect');
+        console.log('[YouTubeTab] disconnect_response', { success: response.success });
+        
+        if (response.success) {
+          updateConnectionStatus('disconnected', 'Disconnected from YouTube');
+          updateUI();
+        } else {
+          showError(response.error || 'Disconnect failed');
+        }
+      } catch (error) {
+        console.error('[YouTubeTab] disconnect_error', { error: error.message });
+        showError(`Disconnect failed: ${error.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Disconnect';
+      }
+    });
+    
+    checkAutoConnect();
+  }
+
+  // Wire YouTube tab functionality for settings modal
+  function wireYouTubeTab() {
+    console.log('[YouTubeTab] Wiring YouTube tab functionality...');
+    wireEventHandlers();
+    updateUI();
   }
 
   // Initialize when DOM is ready

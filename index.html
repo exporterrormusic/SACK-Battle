@@ -706,6 +706,8 @@
 
   <!-- Load moved game scripts from src/game (synchronous, preserves ordering) -->
   <!-- Core utilities loaded first -->
+  <script src="src/utils/audioConstants.js"></script>
+  <script src="src/utils/animationQueue.js"></script>
   <script src="src/utils/logger.js"></script>
   <script src="src/utils/assetHelpers.js"></script>
   <script src="src/utils/audioHelper.js"></script>
@@ -735,7 +737,7 @@
   <script src="src/renderer/coreWrappers.js"></script>
   <script src="src/renderer/utils.js"></script>
   <script src="src/renderer/playlist.js"></script>
-  <script type="module" src="src/renderer/waitingRoom.js"></script>
+  <script src="src/renderer/waitingRoom.js"></script>
   <script src="src/renderer/buffs.js"></script>
   <script src="src/renderer/healthWidget.js"></script>
   <script src="src/renderer/healthStatus.js"></script>

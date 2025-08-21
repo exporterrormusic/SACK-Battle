@@ -3,7 +3,7 @@
  * Connects to the Twitch Extension backend via WebSocket
  */
 
-const { logger } = require('../core');
+const { logger } = require('../../core');
 
 class TwitchExtensionService {
   constructor() {

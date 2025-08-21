@@ -329,7 +329,7 @@ class YouTubeService {
   _parseAvatarCommand(message) {
     try {
       // Get the configured avatar command from settings
-      const { readSettingsFile } = require('../system/settings');
+      const { readSettingsFile } = require('../../system/settings');
       const settings = readSettingsFile() || {};
       const avatarCommand = (settings.chatCommands && settings.chatCommands.youtube && settings.chatCommands.youtube.avatar) || 
                            (settings.chatCommands && settings.chatCommands.avatar) || 

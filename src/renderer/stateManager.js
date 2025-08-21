@@ -282,4 +282,7 @@
   
   global.__stateManager = api;
   
+  // Also export the StateManager class for bootstrap compatibility
+  global.StateManager = StateManager;
+
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -23,12 +23,15 @@ const state = {
 };
 
 function computeEffectiveVolume(category, baseVolume = 1.0) {
-  // Simple rule: effective = base * categoryVolume (musicVolume or sfxVolume)
+  // Use constants for default values
+  const constants = global.AUDIO_CONSTANTS || {};
+  const defaultVolume = category === constants.CATEGORIES?.MUSIC ? 
+    constants.DEFAULT_MUSIC_VOLUME || 0.6 : 
+    constants.DEFAULT_SFX_VOLUME || 0.8;
+
   // Prioritize AudioMixer for real-time volume changes, fall back to Game state
-  if (window.__audioMixer) {
-    const v = window.__audioMixer.calculateCategoryVolume(category, baseVolume);
-    console.log(`[AudioVol] ${category} (AudioMixer): base=${baseVolume} => ${v}`);
-    return v;
+  if (window.__audioMixer && typeof window.__audioMixer.calculateCategoryVolume === 'function') {
+    return window.__audioMixer.calculateCategoryVolume(category, baseVolume);
   }
   
   try {
@@ -36,25 +39,27 @@ function computeEffectiveVolume(category, baseVolume = 1.0) {
     const as = st && st.settings && st.settings.audioSettings ? st.settings.audioSettings : null;
     if (as) {
       const catVol = category === 'music'
-        ? (typeof as.musicVolume === 'number' ? as.musicVolume : 0.6)
-        : (typeof as.sfxVolume === 'number' ? as.sfxVolume : 0.8);
-      const v = Math.max(0, Math.min(1, (typeof baseVolume === 'number' ? baseVolume : 1) * catVol));
-      console.log(`[AudioVol] ${category} (GameState): base=${baseVolume} * cat=${catVol} => ${v}`);
-      return v;
+        ? (typeof as.musicVolume === 'number' ? as.musicVolume : defaultVolume)
+        : (typeof as.sfxVolume === 'number' ? as.sfxVolume : defaultVolume);
+      const result = Math.max(0, Math.min(1, (typeof baseVolume === 'number' ? baseVolume : 1) * catVol));
+      console.log(`[AudioVol] ${category} (GameState): base=${baseVolume} * cat=${catVol} => ${result}`);
+      return result;
     }
   } catch(_) {}
   
+  // Fallback to base volume clamped to valid range
   return Math.max(0, Math.min(1, baseVolume));
 }
 
 function playAudioEnhanced(src, options = {}) {
+  const constants = global.AUDIO_CONSTANTS || {};
   const { volume = 1.0, loop = false, defer = false } = options;
   
   // Traditional audio with proper categorized volume
   const audio = new Audio(src);
   
   // Apply categorized volume using AudioMixer if available
-  const category = window.__audioMixer ? window.__audioMixer.categorizeAudio(src) : (String(src).toLowerCase().includes('/assets/ui/') ? 'music' : 'sfx');
+  const category = window.__audioMixer ? window.__audioMixer.categorizeAudio(src) : (String(src).toLowerCase().includes('/assets/ui/') ? constants.CATEGORIES?.MUSIC || 'music' : constants.CATEGORIES?.SFX || 'sfx');
   const finalVolume = computeEffectiveVolume(category, volume);
   console.log(`[AudioEnhanced] Audio volume for ${src} (${category}): ${volume} -> ${finalVolume}`);
   
@@ -174,7 +179,8 @@ function playBossWelcome(path, bossName) {
       }
       const src = sources[idx];
       const audio = new Audio(src);
-      audio.volume = computeEffectiveVolume('sfx', 0.7);
+      const constants = global.AUDIO_CONSTANTS || {};
+      audio.volume = computeEffectiveVolume('sfx', constants.BOSS_SFX_VOLUME || 0.7);
       let errored = false;
       const onError = () => {
         if (errored) return;
@@ -204,7 +210,8 @@ function playBossWelcome(path, bossName) {
           const iv = setInterval(() => {
             try {
               if (!audio || audio.paused) { clearInterval(iv); return; }
-              const v = computeEffectiveVolume('sfx', 0.7);
+              const constants = global.AUDIO_CONSTANTS || {};
+              const v = computeEffectiveVolume('sfx', constants.BOSS_SFX_VOLUME || 0.7);
               if (Math.abs(audio.volume - v) > 0.005) {
                 audio.volume = v;
                 if (window.__audioMixer) console.log('[BossWelcome] Reapplied SFX volume:', v);

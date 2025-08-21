@@ -6,8 +6,8 @@
 const { TwitchIrcClient } = require('./irc');
 const { EventSubClient } = require('./eventsub');
 const { validateToken, helixGetUser, helixGetSelf, helixCreateEventSubSubscription, TwitchExtensionService } = require('.');
-const { readSettingsFile, writeSettingsFile } = require('../system/settings');
-const CH = require('../core/ipcChannels');
+const { readSettingsFile, writeSettingsFile } = require('../../system/settings');
+const CH = require('../../core/ipcChannels');
 
 class TwitchService {
   constructor({ pushDebug, getWindow }) {

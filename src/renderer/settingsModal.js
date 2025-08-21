@@ -3,17 +3,20 @@ console.log('[SettingsModal] ========== SETTINGS MODAL FILE LOADED ==========');
 window.settingsModalLoaded = true; // Global flag for debugging
 (function(){
   let lastSnapshot=null;
-  function statusEl(){ return document.getElementById('settings-status'); }
+  function statusEl(){ return global.__getElement('settings-status'); }
   function ensureStatusEl(){ 
     let el=statusEl(); 
     if (!el){ 
-      const footer=document.querySelector('#settings-modal .settings-footer') || document.getElementById('settings-modal'); 
+      const footer=document.querySelector('#settings-modal .settings-footer') || global.__getElement('settings-modal');
       if (footer){ 
-        el=document.createElement('div'); 
-        el.id='settings-status'; 
-        el.style.fontSize='0.6rem'; 
-        el.style.opacity='0.7'; 
-        el.style.marginLeft='8px'; 
+        el = global.__createDiv({
+          styles: {
+            fontSize: '0.6rem',
+            opacity: '0.7',
+            marginLeft: '8px'
+          }
+        });
+        el.id = 'settings-status';
         footer.appendChild(el);
       } 
     } 
@@ -49,30 +52,38 @@ window.settingsModalLoaded = true; // Global flag for debugging
       console.log('[SettingsModal] Loading settings from game state:', gs.settings);
       
       // Load audio settings (no normalization)
+      const constants = global.AUDIO_CONSTANTS || {};
+      const defaultSfxVolume = constants.DEFAULT_SFX_VOLUME || 0.8;
+      const defaultMusicVolume = constants.DEFAULT_MUSIC_VOLUME || 0.6;
+      
       if (gs.settings && gs.settings.audioSettings) {
-        if (inputs.sfxVolume) inputs.sfxVolume.value = gs.settings.audioSettings.sfxVolume !== undefined ? gs.settings.audioSettings.sfxVolume : 0.8;
-        if (inputs.musicVolume) inputs.musicVolume.value = gs.settings.audioSettings.musicVolume !== undefined ? gs.settings.audioSettings.musicVolume : 0.6;
+        if (inputs.sfxVolume) inputs.sfxVolume.value = gs.settings.audioSettings.sfxVolume !== undefined ? gs.settings.audioSettings.sfxVolume : defaultSfxVolume;
+        if (inputs.musicVolume) inputs.musicVolume.value = gs.settings.audioSettings.musicVolume !== undefined ? gs.settings.audioSettings.musicVolume : defaultMusicVolume;
       } else {
         // No audio settings exist, use defaults
-        if (inputs.sfxVolume) inputs.sfxVolume.value = 0.8;
-        if (inputs.musicVolume) inputs.musicVolume.value = 0.6;
+        if (inputs.sfxVolume) inputs.sfxVolume.value = defaultSfxVolume;
+        if (inputs.musicVolume) inputs.musicVolume.value = defaultMusicVolume;
       }
 
       // Load game settings
       if (gs.settings) {
-        const maxTurnsInput = document.getElementById('input-max-turns');
-        if (maxTurnsInput && typeof gs.settings.maxTurns === 'number') {
-          maxTurnsInput.value = gs.settings.maxTurns;
+        const gameInputs = global.__getElements([
+          'input-max-turns',
+          'input-turn-length', 
+          'input-boss-hp',
+          'input-max-matches'
+        ]);
+
+        if (gameInputs['input-max-turns'] && typeof gs.settings.maxTurns === 'number') {
+          gameInputs['input-max-turns'].value = gs.settings.maxTurns;
         }
 
-        const turnLengthInput = document.getElementById('input-turn-length');
-        if (turnLengthInput && typeof gs.settings.turnLength === 'number') {
-          turnLengthInput.value = gs.settings.turnLength;
+        if (gameInputs['input-turn-length'] && typeof gs.settings.turnLength === 'number') {
+          gameInputs['input-turn-length'].value = gs.settings.turnLength;
         }
 
-        const bossHpInput = document.getElementById('input-boss-hp');
-        if (bossHpInput && typeof gs.settings.bossHp === 'number') {
-          bossHpInput.value = gs.settings.bossHp;
+        if (gameInputs['input-boss-hp'] && typeof gs.settings.bossHp === 'number') {
+          gameInputs['input-boss-hp'].value = gs.settings.bossHp;
         }
 
         const maxMatchesInput = document.getElementById('input-max-matches');
@@ -852,7 +863,9 @@ window.settingsModalLoaded = true; // Global flag for debugging
             Object.entries(bossSfx).forEach(([sfxType, audio]) => {
               if (audio && typeof audio.volume !== 'undefined') {
                 const oldVolume = audio.volume;
-                const newVolume = window.__audioMixer.calculateCategoryVolume('sfx', 0.8); // 0.8 is the default SFX volume from audio.js
+                const constants = global.AUDIO_CONSTANTS || {};
+                const defaultVolume = constants.DEFAULT_SFX_VOLUME || 0.8;
+                const newVolume = window.__audioMixer.calculateCategoryVolume('sfx', defaultVolume);
                 audio.volume = newVolume;
                 console.log(`[SettingsModal] Updated boss SFX ${sfxType} volume: ${oldVolume} -> ${newVolume}`);
                 updatedCount++;
@@ -878,7 +891,8 @@ window.settingsModalLoaded = true; // Global flag for debugging
             if (window.__audioModule && window.__audioModule.state && window.__audioModule.state.bossWelcome && typeof window.__audioModule.state.bossWelcome.volume !== 'undefined') {
               const a = window.__audioModule.state.bossWelcome;
               const oldV = a.volume;
-              const newV = window.__audioMixer.calculateCategoryVolume('sfx', 0.7);
+              const constants = global.AUDIO_CONSTANTS || {};
+              const newV = window.__audioMixer.calculateCategoryVolume('sfx', constants.BOSS_SFX_VOLUME || 0.7);
               a.volume = newV;
               console.log(`[SettingsModal] Updated boss welcome volume: ${oldV} -> ${newV}`);
               // Optionally replay a tiny blip? We'll avoid forced playback here.
@@ -891,7 +905,8 @@ window.settingsModalLoaded = true; // Global flag for debugging
             Object.entries(window.state.bossAudio.sfx).forEach(([sfxType, audio]) => {
               if (audio && typeof audio.volume !== 'undefined') {
                 const oldVolume = audio.volume;
-                const newVolume = window.__audioMixer.calculateCategoryVolume('sfx', 0.8);
+                const constants = global.AUDIO_CONSTANTS || {};
+                const newVolume = window.__audioMixer.calculateCategoryVolume('sfx', constants.DEFAULT_SFX_VOLUME || 0.8);
                 audio.volume = newVolume;
                 console.log(`[SettingsModal] Updated fallback boss SFX ${sfxType} volume: ${oldVolume} -> ${newVolume}`);
                 updatedCount++;
@@ -909,7 +924,8 @@ window.settingsModalLoaded = true; // Global flag for debugging
               const category = window.__audioMixer.categorizeAudio(src);
               if (category === 'sfx') {
                 const oldVolume = audio.volume;
-                const newVolume = window.__audioMixer.calculateCategoryVolume('sfx', 0.8);
+                const constants = global.AUDIO_CONSTANTS || {};
+                const newVolume = window.__audioMixer.calculateCategoryVolume('sfx', constants.DEFAULT_SFX_VOLUME || 0.8);
                 audio.volume = newVolume;
                 console.log(`[SettingsModal] Updated DOM SFX audio ${index}: ${oldVolume} -> ${newVolume}`);
                 updatedCount++;
@@ -1049,15 +1065,18 @@ window.settingsModalLoaded = true; // Global flag for debugging
       cancelBtn: !!cancelBtn
     });
     
-    if (openBtn) openBtn.addEventListener('click', openSettings);
-    if (closeBtn) closeBtn.addEventListener('click', closeSettings);
-    if (saveBtn) saveBtn.addEventListener('click', saveSettings);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeSettings);
+    // Wire settings modal buttons using enhanced event management
+    const eventHandlers = global.__addEventHandlers([
+      { element: openBtn, event: 'click', handler: openSettings },
+      { element: closeBtn, event: 'click', handler: closeSettings },
+      { element: saveBtn, event: 'click', handler: saveSettings },
+      { element: cancelBtn, event: 'click', handler: closeSettings }
+    ].filter(config => config.element)); // Only add handlers for existing elements
 
     // ESC key to close
-    document.addEventListener('keydown', (e) => {
+    const escHandler = global.__addEventHandler(document, 'keydown', (e) => {
       if (e.key === 'Escape') {
-        const modal = document.getElementById('settings-modal');
+        const modal = global.__getElement('settings-modal');
         if (modal && !modal.classList.contains('hidden')) {
           closeSettings();
         }
@@ -1065,6 +1084,14 @@ window.settingsModalLoaded = true; // Global flag for debugging
     });
     
     console.log('[SettingsModal] Settings modal wired successfully');
+    
+    // Store handler keys for potential cleanup
+    if (global.__memoryManager) {
+      global.__memoryManager.addCleanupCallback(() => {
+        eventHandlers.forEach(key => global.__removeEventHandler(key));
+        global.__removeEventHandler(escHandler);
+      });
+    }
     
     // Wire YouTube tab if function exists
     if (typeof window.wireYouTubeTab === 'function') {

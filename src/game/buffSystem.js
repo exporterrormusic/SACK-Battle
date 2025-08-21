@@ -32,24 +32,39 @@
   const MAX_ACTIVE = 6;
   const DURATION_MS = 2600;
   
-  // Animation queue system
-  const animationQueue = [];
-  let isPlayingAnimation = false;
+  // Unified animation queue system - migrated to AnimationQueueManager
+  let buffQueue; // Will be initialized after AnimationQueueManager loads
   
-  function processAnimationQueue() {
-    if (isPlayingAnimation || animationQueue.length === 0) return;
-    
-    isPlayingAnimation = true;
-    const buffId = animationQueue.shift();
-    
-    console.log('[BuffSystem] Starting queued animation', { buffId, queueLength: animationQueue.length });
-    playAnimationInternal(buffId);
+  // Initialize the buff animation queue using the unified manager
+  function initializeBuffQueue() {
+    if (window.AnimationQueueManager && !buffQueue) {
+      buffQueue = window.AnimationQueueManager.registerQueue(
+        'buffs', 
+        buffAnimationProcessor, 
+        100 // 100ms delay between animations
+      );
+      console.log('[BuffSystem] Initialized unified animation queue');
+    }
+  }
+  
+  // Processor function for buff animations - called by the queue manager
+  function buffAnimationProcessor(buffId, onComplete) {
+    console.log('[BuffSystem] Processing buff animation:', buffId);
+    playAnimationInternal(buffId, onComplete);
   }
   
   function queueAnimation(buffId) {
-    animationQueue.push(buffId);
-    console.log('[BuffSystem] Queued animation', { buffId, queueLength: animationQueue.length });
-    processAnimationQueue();
+    // Ensure queue is initialized
+    if (!buffQueue) {
+      initializeBuffQueue();
+    }
+    
+    if (buffQueue) {
+      buffQueue.enqueue(buffId);
+    } else {
+      console.error('[BuffSystem] Animation queue not available, falling back to direct play');
+      playAnimationInternal(buffId, () => {}); // Fallback without queue
+    }
   }
   function ensureStage(){
     let host = document.getElementById('players-container') || document.body;
@@ -82,7 +97,7 @@
     return { host, img };
   }
   const AUDIO_CACHE = {};
-  function playAnimationInternal(buffId){
+  function playAnimationInternal(buffId, onComplete = () => {}){
     const def = REGISTRY[buffId]; if (!def) return;
     const stage = ensureStage();
     const active = stage.querySelectorAll('.buff-anim-waapi');
@@ -99,29 +114,21 @@
       console.log('[BuffSystem] animFinish', { buffId, runId }); 
       try { img.style.opacity='0'; img.style.filter='blur(6px)'; } catch(_){} 
       setTimeout(()=>{ try { host.remove(); } catch(_){} }, 40); 
-      // Signal that this animation is complete
-      isPlayingAnimation = false;
-      processAnimationQueue();
+      // Signal completion to the animation queue manager
+      onComplete();
     };
     setTimeout(()=>{ if (host.isConnected) { console.log('[BuffSystem] animTimeoutCleanup', { buffId, runId }); try { host.remove(); } catch(_){} } }, DURATION_MS + 400);
     if (!AUDIO_CACHE[def.folder]) {
       const src = `app://assets/powers/${def.folder}/burst.mp3`;
-      let aud;
-      if (window.SackBattle?.utils?.audio) {
-        aud = window.SackBattle.utils.audio.createAudio(src, 'sfx', parseFloat(def.volume||0.8));
-      } else {
-        aud = new Audio(src);
-        // Apply categorized volume using AudioMixer if available
-        try {
-          if (window.__audioMixer) {
-            const vol = window.__audioMixer.calculateCategoryVolume('sfx', parseFloat(def.volume||0.8));
-            aud.volume = vol;
-          } else {
-            aud.volume = parseFloat(def.volume||0.8);
-          }
-        } catch(_) { aud.volume = parseFloat(def.volume||0.8); }
-      }
-      aud.preload = 'auto';
+      const constants = global.AUDIO_CONSTANTS || {};
+      const defaultBuffVolume = constants.BUFF_BURST_VOLUME || 0.8;
+      const volume = parseFloat(def.volume || defaultBuffVolume);
+      
+      // Use unified audio creation helper
+      const aud = global.createAudioWithVolume(src, 'sfx', volume, { 
+        preload: 'auto' 
+      });
+      
       AUDIO_CACHE[def.folder] = aud;
       // Register in shared audio state for centralized updates
       try {
@@ -247,6 +254,10 @@
   if (Game && Game.onUpdate){ Game.onUpdate(st => { const running = st.running; const matchIdx = st.completedMatches; if (!state.lastRunning && running){ state.matchIndex = matchIdx; handleMatchBoundary(); } else if (state.matchIndex !== null && matchIdx !== state.matchIndex){ state.matchIndex = matchIdx; if (running) handleMatchBoundary(); } state.lastRunning = running; refreshTimers(); try { Object.entries(st.players||{}).forEach(([n,p])=>{ const el = document.querySelector(`.player-card[data-name="${n}"]`); if (el){ if (p.invincibleTurns>0) el.classList.add('player-invincible'); else el.classList.remove('player-invincible'); } }); } catch(_){ } }); }
   function initDefaults(){ register({ id:'powerfulattack', aliases:['powerattack','powerful'], folder:'snowwhite', iconFolder:'snowwhite', announceName:'SEVEN DWARVES', effect: ()=> Game.applyPowerfulAttack && Game.applyPowerfulAttack() }); register({ id:'massheal', folder:'rapunzel', iconFolder:'rapunzel', announceName:'GARDEN OF SHANGRI LA', effect: ()=> Game.applyMassHeal && Game.applyMassHeal() }); register({ id:'reviveall', folder:'rapunzel', iconFolder:'rapunzel', announceName:'GARDEN OF SHANGRI LA', effect: ()=> Game.applyReviveAll && Game.applyReviveAll() }); register({ id:'attackup', aliases:['atkup','attackboost'], folder:'crown', iconFolder:'crown', announceName:'LIGHT OF THE KINGDOM', effect: ()=> Game.applyAttackUp && Game.applyAttackUp(5), timerProvider: ()=> Game.getState().attackUpTurns }); }
   initDefaults();
+  
+  // Initialize the unified animation queue when the system loads
+  setTimeout(initializeBuffQueue, 50); // Small delay to ensure AnimationQueueManager is loaded
+  
   if (electronAPI.onTrigger){ electronAPI.onTrigger(payload => { const key = (payload && payload.key)||''; trigger(key, payload.user||payload.username||'Viewer'); }); }
   function refreshUI(){ refreshTimers(); }
   function forceMatchBoundary() { handleMatchBoundary(); }

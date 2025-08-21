@@ -1,4 +1,4 @@
-// src/youtube/index.js
+// src/platforms/youtube/index.js
 // YouTube API helper functions
 const https = require('https');
 

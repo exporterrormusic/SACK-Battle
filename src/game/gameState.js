@@ -534,11 +534,11 @@
         const welcomePath = `assets/boss/${folderName}/welcome.mp3`;
         const src = `app://${welcomePath.replace(/^\/+/, '')}`;
         if (window.SackBattle?.utils?.audio) {
-          const a = window.SackBattle.utils.audio.createAudio(src, 'sfx', 0.7);
+          const a = window.SackBattle.utils.audio.createAudio(src, 'sfx', 0.9);
           a.play().catch(()=>{});
         } else {
           const audio = new Audio(src);
-          if (window.__audioMixer) audio.volume = window.__audioMixer.calculateCategoryVolume('sfx', 0.7); else audio.volume = 0.7;
+          if (window.__audioMixer) audio.volume = window.__audioMixer.calculateCategoryVolume('sfx', 0.9); else audio.volume = 0.9;
           audio.play().catch(()=>{});
         }
       }
@@ -652,11 +652,11 @@
           const welcomePath = `assets/boss/${folderName}/welcome.mp3`;
           const src = `app://${welcomePath.replace(/^\/+/, '')}`;
           if (window.SackBattle?.utils?.audio) {
-            const a = window.SackBattle.utils.audio.createAudio(src, 'sfx', 0.7);
+            const a = window.SackBattle.utils.audio.createAudio(src, 'sfx', 0.9);
             a.play().catch(()=>{});
           } else {
             const audio = new Audio(src);
-            if (window.__audioMixer) audio.volume = window.__audioMixer.calculateCategoryVolume('sfx', 0.7); else audio.volume = 0.7;
+            if (window.__audioMixer) audio.volume = window.__audioMixer.calculateCategoryVolume('sfx', 0.9); else audio.volume = 0.9;
             audio.play().catch(()=>{});
           }
         }

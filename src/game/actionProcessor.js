@@ -52,12 +52,6 @@
       if (processStrike) this.processStrikeActions(actionGroups.strike, gameState, isBossSpecial);
       if (processAttack) this.processAttackActions(actionGroups.attack, gameState, isBossSpecial);
       
-      // Trigger multi-avatar animation after both strike and attack processing
-      // BUT skip if any burst actions occurred (burst overrides multi-avatar animation)
-      if ((processStrike || processAttack) && gameState.boss.hp > 0 && actionGroups.burst.length === 0) {
-        this.triggerMultiAvatarAnimation(actionGroups, gameState);
-      }
-      
       if (processHeal) this.processHealActions(actionGroups.heal, gameState, isBossSpecial);
       if (processCover) this.processCoverActions(actionGroups.cover, gameState);
     },
@@ -212,48 +206,7 @@
         (gameState.playerDamageThisMatch[playerName] || 0) + damage;
     },
 
-    // Trigger multi-avatar attack animation from both strike and attack players
-    triggerMultiAvatarAnimation(actionGroups, gameState) {
-      // Combine strike and attack players for animation
-      const allAttackers = [...actionGroups.strike, ...actionGroups.attack];
-      const eligible = allAttackers.filter(([name, player]) => player.hp > 0 && gameState.boss.hp > 0);
-      
-      console.log('[ActionProcessor] Eligible attackers (strike + attack):', eligible.length);
-      console.log('[ActionProcessor] Strike players:', actionGroups.strike.length);
-      console.log('[ActionProcessor] Attack players:', actionGroups.attack.length);
-      
-      // Prefer strike players (aggressive) first
-      const strikePlayers = actionGroups.strike.filter(([name, player]) => player.hp > 0);
-      let chosen = [];
-      
-      if (strikePlayers.length >= 3) {
-        chosen = strikePlayers.sort(() => Math.random() - 0.5).slice(0, 3);
-      } else {
-        // Fill with attack players if not enough strikes
-        const attackPlayers = actionGroups.attack.filter(([name, player]) => player.hp > 0);
-        const combined = [...strikePlayers, ...attackPlayers];
-        chosen = combined.sort(() => Math.random() - 0.5).slice(0, 3);
-      }
-      
-      console.log('[ActionProcessor] Chosen for multi-attack:', chosen.length, chosen.map(([n]) => n));
-      
-      if (chosen.length > 0 && typeof window.animateMultiAttack === 'function') {
-        // Prepare player info
-        const multiAttackers = chosen.map(([name, player]) => {
-          const avatarSrc = global.SackBattle?.utils?.assets ?
-            global.SackBattle.utils.assets.getAvatarPath(player.avatar) :
-            `app://assets/avatars/${player.avatar}`;
-          return { name, avatarSrc, avatar: player.avatar };
-        });
-        console.log('[ActionProcessor] Calling animateMultiAttack with:', multiAttackers);
-        window.animateMultiAttack(multiAttackers);
-      } else {
-        console.warn('[ActionProcessor] Cannot call animateMultiAttack:', {
-          chosenLength: chosen.length,
-          functionExists: typeof window.animateMultiAttack === 'function'
-        });
-      }
-    },
+
 
     // Trigger burst visual and audio effects
     triggerBurstEffects(player, playerName) {
@@ -272,82 +225,7 @@
           global.animateBurstAttack(playerName, avatarSrc);
         }
       }, 50);
-
-      // Audio effects - let the visual queue system handle audio
-      // The fx.js burst queue will play audio when the animation actually runs
-      // this.playBurstAudio(player); // REMOVED: causing duplicate audio
     },
-
-    // Play burst audio with proper volume handling and fallback
-    playBurstAudio(player) {
-      try {
-        if (!player.avatar) return;
-
-        // Extract folder name from avatar path
-        const avatarFolder = player.avatar.split('/')[0];
-        let burstPath = `app://assets/avatars/${avatarFolder}/burst.mp3`;
-
-        const createAndPlayAudio = (path) => {
-          // Prefer centralized audio helper for consistent volume
-          if (global.SackBattle?.utils?.audio) {
-            const a = global.SackBattle.utils.audio.createAudio(path, 'sfx', 0.8);
-            return a.play().catch(() => {});
-          } else {
-            const audio = new Audio(path);
-            if (global.__audioMixer) {
-              audio.volume = global.__audioMixer.calculateCategoryVolume('sfx', 0.8);
-            } else {
-              audio.volume = 0.8;
-            }
-            return audio.play().catch(() => {});
-          }
-        };
-
-        // First try to play the main path directly
-        const mainAudio = new Audio(burstPath);
-        if (global.__audioMixer) {
-          mainAudio.volume = global.__audioMixer.calculateCategoryVolume('sfx', 0.8);
-        } else {
-          mainAudio.volume = 0.8;
-        }
-
-        let fallbackTriggered = false;
-
-        // Set up fallback logic on error
-        mainAudio.addEventListener('error', () => {
-          if (fallbackTriggered) return; // Prevent multiple fallback attempts
-          fallbackTriggered = true;
-          
-          console.log(`[BurstAudio] File not found: ${burstPath}, trying fallback`);
-          
-          // Try fallback to base character (remove prefixes like "summer", "winter", "tactical", etc.)
-          let baseFolder = avatarFolder;
-          const prefixes = ['summer', 'winter', 'tactical', 'maid', 'idol', 'over', 'spec'];
-          
-          for (const prefix of prefixes) {
-            if (baseFolder.startsWith(prefix)) {
-              baseFolder = baseFolder.substring(prefix.length);
-              break;
-            }
-          }
-          
-          if (baseFolder !== avatarFolder) {
-            const fallbackPath = `app://assets/avatars/${baseFolder}/burst.mp3`;
-            console.log(`[BurstAudio] Trying fallback: ${fallbackPath}`);
-            createAndPlayAudio(fallbackPath);
-          } else {
-            console.warn(`[BurstAudio] No fallback available for ${avatarFolder}`);
-          }
-        });
-
-        // Play the main audio - don't use createAndPlayAudio to avoid duplication
-        mainAudio.play().catch(() => {
-          // Error event will handle fallback automatically
-        });
-      } catch (error) {
-        console.warn('[ActionProcessor] Burst audio failed:', error);
-      }
-    }
   };
 
   global.SackBattle.actionProcessor = actionProcessor;

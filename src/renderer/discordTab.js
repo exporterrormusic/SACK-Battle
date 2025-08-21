@@ -100,19 +100,29 @@ console.log('DISCORD TAB SCRIPT STARTED LOADING');
   function setupEventListeners() {
     console.log('[DiscordTab] Setting up event listeners...');
 
+    // Enhanced event management - collect handler keys for cleanup
+    const handlerKeys = [];
+    const addManagedHandler = (elementId, event, handler) => {
+      const element = global.__getElement(elementId);
+      if (element) {
+        const key = global.__addEventHandler(element, event, handler);
+        if (key) handlerKeys.push(key);
+        return element;
+      }
+      return null;
+    };
+
     // Connect button
-    const connectBtn = document.getElementById('discord-connect-btn');
-    if (connectBtn) {
-      connectBtn.addEventListener('click', async () => {
-        console.log('[DiscordTab] Connect button clicked');
-        
-        const tokenInput = document.getElementById('discord-bot-token');
-        const channelIdInput = document.getElementById('discord-channel-id');
-        
-        if (!tokenInput || !channelIdInput) {
-          console.error('[DiscordTab] Required input elements not found');
-          return;
-        }
+    const connectBtn = addManagedHandler('discord-connect-btn', 'click', async () => {
+      console.log('[DiscordTab] Connect button clicked');
+      
+      const tokenInput = global.__getElement('discord-bot-token');
+      const channelIdInput = global.__getElement('discord-channel-id');
+      
+      if (!tokenInput || !channelIdInput) {
+        console.error('[DiscordTab] Required input elements not found');
+        return;
+      }
         
         const token = tokenInput.value.trim();
         const channelId = channelIdInput.value.trim();
@@ -138,7 +148,6 @@ console.log('DISCORD TAB SCRIPT STARTED LOADING');
           updateConnectionStatus('error', error.message || 'Connection failed');
         }
       });
-    }
 
     // Disconnect button
     const disconnectBtn = document.getElementById('discord-disconnect-btn');
@@ -292,6 +301,14 @@ console.log('DISCORD TAB SCRIPT STARTED LOADING');
           tokenInput.type = 'password';
           revealTokenBtn.textContent = '👁️ Show';
         }
+      });
+    }
+
+    // Register cleanup for all managed handlers
+    if (global.__memoryManager && handlerKeys.length > 0) {
+      global.__memoryManager.addCleanupCallback(() => {
+        handlerKeys.forEach(key => global.__removeEventHandler(key));
+        console.log('[DiscordTab] Cleaned up', handlerKeys.length, 'event handlers');
       });
     }
   }

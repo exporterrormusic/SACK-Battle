@@ -36,6 +36,7 @@ module.exports = {
   DISCORD_VALIDATE_TOKEN: 'discord-validate-token',
   DISCORD_GET_CHANNEL_INFO: 'discord-get-channel-info',
   DISCORD_SEND_MESSAGE: 'discord-send-message',
+  GET_EXTENSION_SETTINGS: 'get-extension-settings',
   LOAD_SETTINGS: 'load-settings',
   SAVE_SETTINGS: 'save-settings',
   GET_ASSETS_LIST: 'get-assets-list',

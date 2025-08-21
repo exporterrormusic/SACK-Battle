@@ -195,25 +195,25 @@ Check the console for detailed instructions.
       }
     }
     
-    // Wire up event listeners
-    if (testBtn) {
-      testBtn.addEventListener('click', testExtensionConnection);
-    }
-    
-    if (saveBtn) {
-      saveBtn.addEventListener('click', saveExtensionSettings);
-    }
-    
-    if (deployBtn) {
-      deployBtn.addEventListener('click', deployBackend);
-    }
+    // Wire up event listeners using enhanced event management
+    const buttonHandlers = global.__addEventHandlers([
+      { element: testBtn, event: 'click', handler: testExtensionConnection },
+      { element: saveBtn, event: 'click', handler: saveExtensionSettings },
+      { element: deployBtn, event: 'click', handler: deployBackend }
+    ].filter(config => config.element));
     
     // Update status when inputs change
-    [extensionClientId, extensionSecret, extensionClientSecret, extensionBackendUrl].forEach(input => {
-      if (input) {
-        input.addEventListener('input', updateStatusDisplay);
-      }
-    });
+    const inputElements = [extensionClientId, extensionSecret, extensionClientSecret, extensionBackendUrl].filter(Boolean);
+    const inputHandlers = global.__addEventHandlers(
+      inputElements.map(input => ({ element: input, event: 'input', handler: updateStatusDisplay }))
+    );
+    
+    // Store handler keys for cleanup
+    if (global.__memoryManager) {
+      global.__memoryManager.addCleanupCallback(() => {
+        [...buttonHandlers, ...inputHandlers].forEach(key => global.__removeEventHandler(key));
+      });
+    }
     
     // Load settings when tab is opened
     loadExtensionSettings();

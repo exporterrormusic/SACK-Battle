@@ -1,7 +1,7 @@
 // src/discord/service.js
 // Discord bot service integration
 const WebSocket = require('ws');
-const { readSettingsFile } = require('../system/settings');
+const { readSettingsFile } = require('../../system/settings');
 const { validateBotToken, getChannelInfo, sendMessage } = require('./index');
 
 class DiscordService {

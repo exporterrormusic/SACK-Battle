@@ -36,13 +36,15 @@
         return key; // Return existing key instead of adding duplicate
       }
 
-      element.addEventListener(event, handler, options);
+      // Ensure options is properly formatted for addEventListener
+      const eventOptions = typeof options === 'boolean' ? options : (options || {});
+      element.addEventListener(event, handler, eventOptions);
       
       this.eventListeners.set(key, {
         element,
         event,
         handler,
-        options,
+        options: eventOptions,
         timestamp: Date.now()
       });
 

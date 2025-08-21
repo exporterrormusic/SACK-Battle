@@ -8,7 +8,7 @@
     console.log('[GameInit] Initializing registries and systems...');
 
     // Ensure registries are available
-    if (!global.SackBattle?.core?.registries) {
+    if (!global.SackBattle?.registries) {
       console.error('[GameInit] Registries not available!');
       return;
     }
