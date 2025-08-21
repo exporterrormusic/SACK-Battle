@@ -80,8 +80,18 @@
         const list = getBossPlaylist(Game.getState().settings); list.push({ id: sel.value, hp: hpVal, subName: subVal }); hpInput.value=''; subInput.value=''; saveBossPlaylist(list); decorateBossSelect();
       }; }
   }
-  function applyNextBossFromPlaylist(){
+  function applyNextBossFromPlaylist(forceApply = false, skipIntroSfx = false){
     try {
+      // Check if welcome screen is active - don't apply boss if it is (unless forced)
+      if (!forceApply) {
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const isWelcomeActive = welcomeScreen && welcomeScreen.classList.contains('active');
+        if (isWelcomeActive) {
+          console.log('[Playlist] Skipping boss application - welcome screen is active');
+          return;
+        }
+      }
+      
       const Game = global.Game; if (!Game || !Game.getState) return;
       const manifest = global.bossManifest || [];
       const s = Game.getState().settings || {};
@@ -116,13 +126,26 @@
       //   const rotated = [...list.slice(1), list[0]]; saveBossPlaylist(rotated);
       // }
       const bossImageEl = document.getElementById('boss-image'); if (bossImageEl && meta.portrait) bossImageEl.src = meta.portrait.startsWith('app://') ? meta.portrait : `app://${meta.portrait}`;
-      if (global.initBossAudio) { global.initBossAudio(meta); }
+      if (global.initBossAudio) { global.initBossAudio(meta, { skipIntroSfx }); }
       global.__bossAppliedAt = Date.now();
   // Do not hide boss-overlay here; startController will manage visibility. Hiding caused boss UI to disappear after Next Game.
     } catch(e){ console.warn('[Playlist] apply next failed', e); }
   }
   function ensureBossSelected(retries){
     retries = retries || 0;
+    
+    // Check if welcome screen is active - don't ensure boss if it is
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const isWelcomeActive = welcomeScreen && welcomeScreen.classList.contains('active');
+    if (isWelcomeActive) {
+      console.log('[Playlist] Deferring boss selection - welcome screen is active');
+      // Retry after welcome screen might be dismissed
+      if (retries < 40) {
+        setTimeout(() => ensureBossSelected(retries + 1), 500);
+      }
+      return;
+    }
+    
     const Game = global.Game; if (!Game || !Game.getState) return;
     const st = Game.getState();
     const manifest = global.bossManifest || [];

@@ -1,9 +1,12 @@
 // src/renderer/waitingRoom.js
 // Waiting room & pre-battle overlay module (converted back to regular script)
 
+console.log('[WaitingRoom] Script loading started');
+
 (function() {
 'use strict';
 
+console.log('[WaitingRoom] IIFE started');
 const global = typeof window !== 'undefined' ? window : globalThis;
 const audio = global.__audioModule;
 const overlayMusic = audio ? audio.state.overlayMusic : { type:null, audio:null };
@@ -22,35 +25,18 @@ let waitingActive = false; // exported via global.waitingActive for legacy code
       const Game = global.Game;
       const gs = Game && Game.getState ? Game.getState() : null;
       const settings = gs && gs.settings ? gs.settings : {};
-      ensureWaitingEl();
-      if (!waitingEl) return;
-      const bg = waitingEl.querySelector('.waiting-bg');
-      const mainLogo = waitingEl.querySelector('.waiting-logo.main');
-      const secLogo = waitingEl.querySelector('.waiting-logo.secondary');
-      const bgPath = settings.waitingBackgroundImage || 'app://assets/ui/menu-bkg.jpg';
-      if (bg) {
-        bg.style.backgroundImage = bgPath ? `url(${bgPath})` : '';
-        bg.style.backgroundSize = 'cover';
-        bg.style.backgroundPosition = 'center';
-      }
-      if (mainLogo) {
-        const src = settings.waitingMainLogoImage || 'app://assets/ui/main-logo.png';
-        mainLogo.style.backgroundImage = src ? `url(${src})` : '';
-        mainLogo.style.backgroundSize = 'contain';
-        mainLogo.style.backgroundRepeat = 'no-repeat';
-        mainLogo.style.backgroundPosition = 'center';
-      }
-      if (secLogo) {
-        const src2 = settings.waitingSecondaryLogoImage || 'app://assets/ui/secondary-logo.png';
-        secLogo.style.backgroundImage = src2 ? `url(${src2})` : '';
-        secLogo.style.backgroundSize = 'contain';
-        secLogo.style.backgroundRepeat = 'no-repeat';
-        secLogo.style.backgroundPosition = 'center';
-      }
+      console.log('[WaitingRoom] rebuildWaitingRoom called');
     } catch(e){ console.warn('[WaitingRoom] rebuild failed', e); }
   }
 
-  function initWaitingAssets(){ ensureWaitingEl(); }
+  function initWaitingAssets(){
+    const bgEl = document.querySelector('.waiting-bg');
+    const logoMain = document.querySelector('.waiting-logo.main');
+    const logoSec = document.querySelector('.waiting-logo.secondary');
+    if (bgEl) bgEl.style.backgroundImage = 'url("app://assets/ui/menu-bkg.jpg")';
+    if (logoMain) logoMain.style.backgroundImage = 'url("app://assets/ui/main-logo.png")';
+    if (logoSec) logoSec.style.backgroundImage = 'url("app://assets/ui/secondary-logo.png")';
+  }
 
   function setWaiting(active){
     waitingActive = !!active; global.waitingActive = waitingActive; // preserve legacy global var
@@ -83,49 +69,26 @@ let waitingActive = false; // exported via global.waitingActive for legacy code
             w.loop = true;
             try {
               if (window.SackBattle?.utils?.audio && !w.volumeSet) {
-                window.SackBattle.utils.audio.updateVolume(w, 'music', 1.0);
-              } else if (window.__audioMixer) {
-                w.volume = window.__audioMixer.calculateCategoryVolume('music');
-              } else {
-                w.volume = 0.55; // Fallback if AudioMixer not available
+                const vol = window.SackBattle.utils.audio.getVolumeForCategory('music');
+                if (typeof vol === 'number') { w.volume = vol; w.volumeSet = true; }
+              } else if (!w.volumeSet && window.__audioMixer) { 
+                w.volume = window.__audioMixer.getEffectiveVolume('music'); w.volumeSet = true; 
               }
-            } catch(_) { w.volume = 0.55; }
+            } catch(e){ console.warn('[WaitingAudio] Volume setup failed', e); }
+            w.addEventListener('canplaythrough', () => {
+              try { if (!w.paused) return; w.play().catch(err => console.warn('[WaitingMusic] play failed:', err)); } catch(e){ console.warn('[WaitingMusic] canplaythrough handler failed', e); }
+            }, { once: true });
             setWaiting._waitingAudio = w;
-            w.play().catch(e => console.warn('[WaitingMusic] play failed', e));
-        } else {
-          // Force AudioMixer to refresh settings from current game state before updating volume
-          if (window.__audioMixer && window.Game) {
-            const currentState = window.Game.getState();
-            if (currentState.settings && currentState.settings.audioSettings) {
-              window.__audioMixer.updateAudioSettings(currentState.settings);
-              console.log('[WaitingRoom] Refreshed AudioMixer settings for existing waiting audio');
-            }
           }
-          
-          // Update the volume of existing waiting audio to current settings
-          if (window.__audioMixer) {
-            const newVolume = window.__audioMixer.calculateCategoryVolume('music');
-              try {
-                if (window.SackBattle?.utils?.audio) {
-                  window.SackBattle.utils.audio.updateVolume(setWaiting._waitingAudio, 'music', 1.0);
-                } else {
-                  setWaiting._waitingAudio.volume = newVolume;
-                }
-              } catch(_) { setWaiting._waitingAudio.volume = newVolume; }
-            console.log('[WaitingRoom] Updated existing waiting music volume to:', newVolume);
-          }
-          
-          // Only play if paused
+          // Only play if not already playing
           if (setWaiting._waitingAudio.paused) {
-            try { setWaiting._waitingAudio.play().catch(()=>{}); } catch(_){ }
+            try { setWaiting._waitingAudio.play().catch(err => console.warn('[WaitingMusic] play after creation failed:', err)); } catch(e){ console.warn('[WaitingMusic] play exception', e); }
           }
-        }
       }, 300);
     } else {
       document.getElementById('app')?.classList.remove('waiting-active');
       waitingEl.classList.remove('active');
-      setTimeout(()=>waitingEl.classList.add('waiting-hidden'),400);
-      // Remove hidden-waiting immediately when waiting room is dismissed
+      waitingEl.classList.add('waiting-hidden');
       playersContainer?.classList.remove('hidden-waiting');
       bossContainer?.classList.remove('hidden-waiting');
       if (setWaiting._waitingAudio) { try { setWaiting._waitingAudio.pause(); } catch(_){ } }
@@ -187,8 +150,6 @@ let waitingActive = false; // exported via global.waitingActive for legacy code
       battleEl.style.letterSpacing = Math.max(0, bs - 0.2) + 'px';
     }
   }
-  // Enhanced window resize handler
-  global.__domUtils.addEventHandler(window, 'resize', adjustPrebattleLines, 'waiting-room-resize');
 
   function showInitialPrebattle(){
     if (global.__suppressPrebattle) { console.log('[Prebattle] Suppressed (flag)'); return; }
@@ -223,9 +184,8 @@ let waitingActive = false; // exported via global.waitingActive for legacy code
   }
 
   function wireWaitingDismiss(){
-    ensureWaitingEl();
-    if (!waitingEl) return;
-    if (wireWaitingDismiss._wired) return; wireWaitingDismiss._wired = true;
+    if (wireWaitingDismiss._wired) return;
+    wireWaitingDismiss._wired = true;
     function launchPrebattleOnce(){ if (wireWaitingDismiss._pbShown) return; wireWaitingDismiss._pbShown = true; showInitialPrebattle(); }
     function dismissWaiting(e){
       if (!waitingActive) return;
@@ -240,20 +200,29 @@ let waitingActive = false; // exported via global.waitingActive for legacy code
       global.__domUtils.removeEventHandler('waiting-room-element-click');
       wireWaitingDismiss._wired = false; // Allow re-wiring after reset
     }
-    // Enhanced waiting room event handlers with memory management
-    global.__domUtils.addEventHandler(document, 'click', dismissWaiting, 'waiting-room-document-click', { capture: true });
-    global.__domUtils.addEventHandler(waitingEl, 'click', dismissWaiting, 'waiting-room-element-click', { capture: true });
+    const waitingEl = document.getElementById('welcome-screen');
+    if (waitingEl && global.__domUtils) {
+      global.__domUtils.addEventHandler(waitingEl, 'click', dismissWaiting, 'waiting-room-element-click');
+      global.__domUtils.addEventHandler(document, 'click', dismissWaiting, 'waiting-room-document-click');
+    }
   }
 
   function initialShow(){
+    console.log('[WaitingRoom] initialShow called, checking if already done:', !!initialShow._done);
     if (initialShow._done) return; initialShow._done = true;
+    console.log('[WaitingRoom] Executing initialShow - waitingActive:', waitingActive);
+    console.log('[WaitingRoom] Waiting audio state:', setWaiting._waitingAudio ? 'exists' : 'none', setWaiting._waitingAudio?.paused ? 'paused' : 'playing');
     // Only call setWaiting(true) once if not already active and music not playing
     if (!waitingActive && (!setWaiting._waitingAudio || setWaiting._waitingAudio.paused)) {
-      try { setWaiting(true); rebuildWaitingRoom(); } catch(e){ }
+      console.log('[WaitingRoom] Calling setWaiting(true) and rebuildWaitingRoom');
+      try { setWaiting(true); rebuildWaitingRoom(); } catch(e){ console.error('[WaitingRoom] Error in setWaiting/rebuild:', e); }
+    } else {
+      console.log('[WaitingRoom] Skipping setWaiting - already active or music playing');
     }
     // Remove redundant timeouts
     wireWaitingDismiss();
   }
+
 // Global exports
 global.__waitingRoom = { rebuildWaitingRoom, setWaiting, initWaitingAssets, showInitialPrebattle, adjustPrebattleLines, isActive:()=>waitingActive, wireWaitingDismiss, initialShow };
 global.setWaiting = setWaiting;
@@ -264,25 +233,40 @@ global.wireWaitingDismiss = wireWaitingDismiss;
 
 // Ensure domUtils is available before wiring
 function initializeWaitingRoom() {
-  if (global.__domUtils && global.__domUtils.wireOnceEnhanced) {
-    global.__domUtils.wireOnceEnhanced(document, 'DOMContentLoaded', initialShow, 'waiting-room-init');
-  } else {
-    // Fallback if domUtils isn't ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initialShow);
-    } else {
-      // DOM already loaded
-      setTimeout(initialShow, 100);
+  console.log('[WaitingRoom] Initializing waiting room');
+  initWaitingAssets();
+  const checkForWaiting = () => {
+    const welcomeScreen = document.getElementById('welcome-screen');
+    if (welcomeScreen && !waitingActive) {
+      initialShow();
     }
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkForWaiting);
+  } else {
+    checkForWaiting();
   }
 }
 
 // Initialize immediately or wait for domUtils
+console.log('[WaitingRoom] Module initialized, domUtils available:', !!global.__domUtils);
 if (global.__domUtils) {
+  console.log('[WaitingRoom] domUtils available, calling initializeWaitingRoom immediately');
   initializeWaitingRoom();
 } else {
   // Wait a bit for domUtils to load
-  setTimeout(initializeWaitingRoom, 100);
+  console.log('[WaitingRoom] domUtils not available, waiting 100ms');
+  setTimeout(() => {
+    if (global.__domUtils) {
+      console.log('[WaitingRoom] domUtils now available, calling initializeWaitingRoom');
+      initializeWaitingRoom();
+    } else {
+      console.warn('[WaitingRoom] domUtils still not available after 100ms, initializing anyway');
+      initializeWaitingRoom();
+    }
+  }, 100);
 }
 
 })(); // End IIFE
+
+console.log('[WaitingRoom] Module loading complete');

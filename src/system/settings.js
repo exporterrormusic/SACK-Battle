@@ -39,8 +39,48 @@ function readSettingsFile(){
 
 function writeSettingsFile(data){
   try { 
+    const stack = new Error().stack;
+    console.log('[SettingsDebug] writeSettingsFile called with OAuth:', {
+      youtubeOAuthClientId: data?.youtubeOAuthClientId ? `[${data.youtubeOAuthClientId.length} chars]` : data?.youtubeOAuthClientId,
+      youtubeOAuthClientSecret: data?.youtubeOAuthClientSecret ? `[${data.youtubeOAuthClientSecret.length} chars]` : data?.youtubeOAuthClientSecret,
+      youtubeOAuthTokens: data?.youtubeOAuthTokens
+    });
+    console.log('[SettingsDebug] Call stack:', stack.split('\n').slice(1, 4).join('\n'));
+    
+    // Read existing settings to preserve OAuth credentials if incoming data has empty values
+    const existingSettings = readSettingsFile();
+    let finalData = data;
+    
+    if (existingSettings) {
+      // Preserve existing OAuth values if incoming data has empty values
+      if ((!data?.youtubeOAuthClientId || data.youtubeOAuthClientId === '') && 
+          existingSettings.youtubeOAuthClientId && existingSettings.youtubeOAuthClientId !== '') {
+        console.log('[SettingsDebug] Preserving existing OAuth client ID');
+        finalData = { ...data, youtubeOAuthClientId: existingSettings.youtubeOAuthClientId };
+      }
+      
+      if ((!data?.youtubeOAuthClientSecret || data.youtubeOAuthClientSecret === '') && 
+          existingSettings.youtubeOAuthClientSecret && existingSettings.youtubeOAuthClientSecret !== '') {
+        console.log('[SettingsDebug] Preserving existing OAuth client secret');
+        finalData = { ...finalData, youtubeOAuthClientSecret: existingSettings.youtubeOAuthClientSecret };
+      }
+      
+      if ((!data?.youtubeOAuthTokens || data.youtubeOAuthTokens === null) && 
+          existingSettings.youtubeOAuthTokens && existingSettings.youtubeOAuthTokens !== null) {
+        console.log('[SettingsDebug] Preserving existing OAuth tokens');
+        finalData = { ...finalData, youtubeOAuthTokens: existingSettings.youtubeOAuthTokens };
+      }
+    }
+    
     // Always migrate settings before saving to ensure consistency
-    const migratedData = migrateSettings(data);
+    const migratedData = migrateSettings(finalData);
+    
+    console.log('[SettingsDebug] After migration OAuth:', {
+      youtubeOAuthClientId: migratedData?.youtubeOAuthClientId ? `[${migratedData.youtubeOAuthClientId.length} chars]` : migratedData?.youtubeOAuthClientId,
+      youtubeOAuthClientSecret: migratedData?.youtubeOAuthClientSecret ? `[${migratedData.youtubeOAuthClientSecret.length} chars]` : migratedData?.youtubeOAuthClientSecret,
+      youtubeOAuthTokens: migratedData?.youtubeOAuthTokens
+    });
+    
     fs.writeFileSync(settingsFile(), JSON.stringify(migratedData,null,2),'utf8'); 
     logger.debug('settings','write_ok'); 
     return true; 
@@ -64,12 +104,15 @@ function migrateSettings(raw) {
   if (!['cooldown','matchend'].includes(raw.respawnMode)) raw.respawnMode = 'cooldown';
   
   // Preserve YouTube settings (ensure they exist with defaults)
-  if (!raw.youtubeApiKey) raw.youtubeApiKey = '';
-  if (!raw.youtubeChannelId) raw.youtubeChannelId = '';
+  if (raw.youtubeApiKey === undefined) raw.youtubeApiKey = '';
+  if (raw.youtubeChannelId === undefined) raw.youtubeChannelId = '';
+  if (raw.youtubeOAuthClientId === undefined) raw.youtubeOAuthClientId = '';
+  if (raw.youtubeOAuthClientSecret === undefined) raw.youtubeOAuthClientSecret = '';
+  if (raw.youtubeOAuthTokens === undefined) raw.youtubeOAuthTokens = null;
   
   // Preserve Discord settings (ensure they exist with defaults)
-  if (!raw.discordBotToken) raw.discordBotToken = '';
-  if (!raw.discordChannelId) raw.discordChannelId = '';
+  if (raw.discordBotToken === undefined) raw.discordBotToken = '';
+  if (raw.discordChannelId === undefined) raw.discordChannelId = '';
   
   // Handle chatCommands migration to platform-specific structure
   const cc = raw.chatCommands || {};

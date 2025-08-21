@@ -77,6 +77,22 @@
         <div class="waiting-logo secondary"></div>
       </div>
 
+    <script>
+      // Simple DOM ready handler to set initial state - main logic is in waitingRoom.js
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('[HTML] DOM loaded, waiting for waitingRoom module to initialize');
+        console.log('[HTML] Testing script execution - this should appear in logs');
+        
+        // Test if we can access DOM elements
+        const waitingOverlay = document.getElementById('waiting-overlay');
+        const prebattleOverlay = document.getElementById('prebattle-overlay');
+        console.log('[HTML] Elements test:', {
+          waitingOverlay: !!waitingOverlay,
+          prebattleOverlay: !!prebattleOverlay
+        });
+      });
+    </script>
+
     </div>
 
     <!-- Scoreboard overlay -->
@@ -604,6 +620,38 @@
               </div>
             </div>
             
+            <div class="setting-section">
+              <h4>🔐 OAuth Authentication (Required for Live Chat)</h4>
+              <p>OAuth credentials are required to access YouTube live chat. Get these from Google Cloud Console.</p>
+              
+              <div class="setting-row">
+                <label for="youtube-oauth-client-id">OAuth Client ID:</label>
+                <div class="reveal-wrapper">
+                  <input type="password" id="youtube-oauth-client-id" placeholder="Enter OAuth Client ID">
+                  <button type="button" class="reveal-btn" data-target="youtube-oauth-client-id" aria-label="Reveal Client ID">👁</button>
+                </div>
+              </div>
+              
+              <div class="setting-row">
+                <label for="youtube-oauth-client-secret">OAuth Client Secret:</label>
+                <div class="reveal-wrapper">
+                  <input type="password" id="youtube-oauth-client-secret" placeholder="Enter OAuth Client Secret">
+                  <button type="button" class="reveal-btn" data-target="youtube-oauth-client-secret" aria-label="Reveal Client Secret">👁</button>
+                </div>
+              </div>
+              
+              <div class="setting-row">
+                <button type="button" id="youtube-oauth-btn" class="auth-btn">Authenticate with YouTube</button>
+                <span id="youtube-oauth-status" class="status-indicator">Not Authenticated ❌</span>
+              </div>
+              
+              <div class="setting-row">
+                <button type="button" id="youtube-connect-chat-btn" class="connect-btn" disabled>Connect to Live Chat</button>
+                <button type="button" id="youtube-disconnect-chat-btn" class="disconnect-btn" disabled>Disconnect Chat</button>
+                <span id="youtube-chat-status" class="status-indicator">Not Connected</span>
+              </div>
+            </div>
+            
             <div class="setting-row">
               <button type="button" id="youtube-connect" class="connect-btn" disabled>Connect to YouTube</button>
               <button type="button" id="youtube-disconnect" class="disconnect-btn" style="display: none;">Disconnect</button>
@@ -724,47 +772,66 @@
   <script src="src/integration/backendSync.js"></script>
   
   <!-- Modular renderer scripts (no bundler; each registers globals) -->
-  <script src="src/renderer/eventBus.js"></script>
-  <script src="src/renderer/stateManager.js"></script>
-  <script src="src/renderer/memoryManager.js"></script>
-  <script src="src/renderer/audioMixer.js"></script>
-  <script src="src/renderer/audio.js"></script>
-  <script src="src/renderer/settings.js"></script>
-  <script src="src/renderer/commandTabs.js"></script>
-  <script src="src/renderer/persistenceHelper.js"></script>
-  <script src="src/renderer/domUtils.js"></script>
-  <script src="src/renderer/persistence.js"></script>
-  <script src="src/renderer/coreWrappers.js"></script>
-  <script src="src/renderer/utils.js"></script>
-  <script src="src/renderer/playlist.js"></script>
-  <script src="src/renderer/waitingRoom.js"></script>
-  <script src="src/renderer/buffs.js"></script>
-  <script src="src/renderer/healthWidget.js"></script>
-  <script src="src/renderer/healthStatus.js"></script>
-  <script src="src/renderer/gameBindings.js"></script>
-  <script src="src/renderer/bootstrap.js"></script>
-  <script src="src/renderer/bossUI.js"></script>
-  <script src="src/renderer/overlays.js"></script>
-  <script src="src/renderer/playerRender.js"></script>
-  <script src="src/renderer/records.js"></script>
-  <script src="src/renderer/ranks.js"></script>
-  <script src="src/renderer/triggers.js"></script>
-  <script src="src/renderer/controls.js"></script>
-  <script src="src/renderer/settingsTabs.js"></script>
-  <script src="src/renderer/youtubeTab.js"></script>
-  <script src="src/renderer/discordTab.js"></script>
-  <script src="src/renderer/extensionTab.js"></script>
-  <script src="src/renderer/settingsModal.js"></script>
+  <!-- Core modules first -->
+  <script src="src/renderer/core/eventBus.js"></script>
+  <script src="src/renderer/core/stateManager.js"></script>
+    <!-- Core modules -->
+  <script src="src/renderer/core/memoryManager.js"></script>
+  <script src="src/renderer/core/domUtils.js"></script>
+  <script src="src/renderer/core/coreWrappers.js"></script>
+  <script src="src/renderer/core/utils.js"></script>
+  <script src="src/renderer/core/bootstrap.js"></script>
+  
+  <!-- Audio modules -->
+  <script src="src/renderer/audio/audioMixer.js"></script>
+  <script src="src/renderer/audio/audio.js"></script>
+  <script src="src/renderer/audio/playlist.js"></script>
+  
+  <!-- Data and persistence -->
+  <script src="src/renderer/data/settings.js"></script>
+  <script src="src/renderer/data/persistenceHelper.js"></script>
+  <script src="src/renderer/data/persistence.js"></script>
+  <script src="src/renderer/data/records.js"></script>
+  <script src="src/renderer/data/ranks.js"></script>
+  
+  <!-- Platform integration -->
+  <script src="src/renderer/platform/triggers.js"></script>
+  
+  <!-- Game modules -->
+  <script src="src/renderer/game/waitingRoom.js"></script>
+  <script src="src/renderer/game/gameBindings.js"></script>
+  <script src="src/renderer/game/playerRender.js"></script>
+  
+  <!-- Effects -->
+  <script src="src/renderer/effects/buffs.js"></script>
+  
+  <!-- UI components -->
+  <script src="src/renderer/ui/healthWidget.js"></script>
+  <script src="src/renderer/ui/healthStatus.js"></script>
+  <script src="src/renderer/ui/bossUI.js"></script>
+  <script src="src/renderer/ui/overlays.js"></script>
+  
+  <!-- Tabs -->
+  <script src="src/renderer/tabs/commandTabs.js"></script>
+  <script src="src/renderer/tabs/settingsTabs.js"></script>
+  <script src="src/renderer/tabs/youtubeTab.js"></script>
+  <script src="src/renderer/tabs/discordTab.js"></script>
+  <script src="src/renderer/tabs/extensionTab.js"></script>
+  
+  <!-- More platform and game -->
+  <script src="src/renderer/game/controls.js"></script>
+  <script src="src/renderer/ui/settingsModal.js"></script>
+  
   <!-- Extracted modules -->
-  <script src="src/renderer/assets.js"></script>
-  <script src="src/renderer/avatars.js"></script>
-  <script src="src/renderer/fx.js"></script>
-  <script src="src/renderer/chat.js"></script>
-  <script src="src/renderer/oauth.js"></script>
-  <script src="src/renderer/debugPanel.js"></script>
-  <script src="src/renderer/uiExtras.js"></script>
-  <script src="src/renderer/startController.js"></script>
+  <script src="src/renderer/data/assets.js"></script>
+  <script src="src/renderer/data/avatars.js"></script>
+  <script src="src/renderer/effects/fx.js"></script>
+  <script src="src/renderer/platform/chat.js"></script>
+  <script src="src/renderer/platform/oauth.js"></script>
+  <script src="src/renderer/ui/debugPanel.js"></script>
+  <script src="src/renderer/ui/uiExtras.js"></script>
+  <script src="src/renderer/game/startController.js"></script>
   <script src="renderer.js"></script>
-  <script src="src/renderer/gameLoop.js"></script>
+  <script src="src/renderer/game/gameLoop.js"></script>
 </body>
 </html>

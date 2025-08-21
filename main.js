@@ -3,20 +3,13 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 const { spawn } = require('child_process');
-// IPC channel constants & logger
-const CH = require('./src/core/ipcChannels');
-const logger = require('./src/core/logger');
-// (Legacy Helix helpers now handled inside TwitchService – no direct imports needed here)
-// New unified Twitch service façade
-const { TwitchService } = require('./src/platforms/twitch/service');
+// Core modules
+const { ipcChannels: CH, logger } = require('./src/core');
+
+// Platform services
+const { TwitchService, YouTubeService, DiscordService } = require('./src/platforms');
 let twitchService = null;
-
-// YouTube service integration
-const { YouTubeService } = require('./src/platforms/youtube/service');
 let youtubeService = null;
-
-// Discord service integration
-const { DiscordService } = require('./src/platforms/discord/service');
 let discordService = null;
 
 // Backend server management
@@ -268,8 +261,11 @@ function migrateSettings(raw) {
   if (!['cooldown','matchend'].includes(raw.respawnMode)) raw.respawnMode = 'cooldown';
   
   // Preserve YouTube settings (ensure they exist with defaults)
-  if (!raw.youtubeApiKey) raw.youtubeApiKey = '';
-  if (!raw.youtubeChannelId) raw.youtubeChannelId = '';
+  if (raw.youtubeApiKey === undefined) raw.youtubeApiKey = '';
+  if (raw.youtubeChannelId === undefined) raw.youtubeChannelId = '';
+  if (raw.youtubeOAuthClientId === undefined) raw.youtubeOAuthClientId = '';
+  if (raw.youtubeOAuthClientSecret === undefined) raw.youtubeOAuthClientSecret = '';
+  if (raw.youtubeOAuthTokens === undefined) raw.youtubeOAuthTokens = null;
   
   // Preserve Discord settings (ensure they exist with defaults)
   if (!raw.discordBotToken) raw.discordBotToken = '';
@@ -486,7 +482,40 @@ ipcMain.handle(CH.LOAD_SETTINGS, async () => {
 
 // Save settings
 ipcMain.handle(CH.SAVE_SETTINGS, async (event, data) => {
-  writeSettingsFile(data || {});
+  console.log('[MainDebug] SAVE_SETTINGS called with OAuth fields:', {
+    hasOAuthClientId: data && typeof data.youtubeOAuthClientId !== 'undefined',
+    hasOAuthClientSecret: data && typeof data.youtubeOAuthClientSecret !== 'undefined',
+    hasOAuthTokens: data && typeof data.youtubeOAuthTokens !== 'undefined',
+    clientIdValue: data?.youtubeOAuthClientId?.length || 0,
+    clientSecretValue: data?.youtubeOAuthClientSecret?.length || 0
+  });
+  
+  // For partial saves, we need to merge with existing settings
+  const existingSettings = readSettingsFile();
+  const mergedSettings = { ...existingSettings, ...(data || {}) };
+  
+  // Special handling for OAuth fields - preserve existing non-empty values if incoming values are empty
+  if (existingSettings.youtubeOAuthClientId && (!data?.youtubeOAuthClientId || data.youtubeOAuthClientId.trim() === '')) {
+    mergedSettings.youtubeOAuthClientId = existingSettings.youtubeOAuthClientId;
+    console.log('[MainDebug] Preserved existing OAuth Client ID');
+  }
+  if (existingSettings.youtubeOAuthClientSecret && (!data?.youtubeOAuthClientSecret || data.youtubeOAuthClientSecret.trim() === '')) {
+    mergedSettings.youtubeOAuthClientSecret = existingSettings.youtubeOAuthClientSecret;
+    console.log('[MainDebug] Preserved existing OAuth Client Secret');
+  }
+  if (existingSettings.youtubeOAuthTokens && (!data?.youtubeOAuthTokens || data.youtubeOAuthTokens === null)) {
+    mergedSettings.youtubeOAuthTokens = existingSettings.youtubeOAuthTokens;
+    console.log('[MainDebug] Preserved existing OAuth Tokens');
+  }
+  
+  console.log('[MainDebug] Final OAuth values:', {
+    existingOAuthClientId: existingSettings.youtubeOAuthClientId?.length || 0,
+    existingOAuthClientSecret: existingSettings.youtubeOAuthClientSecret?.length || 0,
+    finalOAuthClientId: mergedSettings.youtubeOAuthClientId?.length || 0,
+    finalOAuthClientSecret: mergedSettings.youtubeOAuthClientSecret?.length || 0
+  });
+  
+  writeSettingsFile(mergedSettings);
   return true;
 });
 
@@ -560,13 +589,80 @@ ipcMain.handle(CH.YOUTUBE_GET_CHANNEL_INFO, async (event, { channelId, apiKey })
   try {
     const { getChannelInfo } = require('./src/platforms/youtube/index');
     console.log('[YouTube] Calling getChannelInfo...');
-    const channelInfo = await getChannelInfo(channelId, apiKey);
+    const channelInfo = await getChannelInfo(apiKey, channelId);
     console.log('[YouTube] getChannelInfo result:', channelInfo);
-    return { success: true, data: channelInfo };
+    return channelInfo; // Return the result directly, don't double-wrap it
   } catch (e) {
     console.error('[YouTube] Channel info error:', e.message, e.stack);
     return { success: false, error: e.message };
   }
+});
+
+// YouTube OAuth handlers
+ipcMain.handle('ipc-youtube-start-oauth', async (event, { clientId, clientSecret }) => {
+  console.log('[YouTube] Starting OAuth flow...');
+  try {
+    const { startOAuthFlow } = require('./src/platforms/youtube/index');
+    const result = await startOAuthFlow(clientId, clientSecret);
+    console.log('[YouTube] OAuth result:', result);
+    return result;
+  } catch (error) {
+    console.error('[YouTube] OAuth error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('ipc-youtube-connect-chat', async (event, { apiKey, channelId }) => {
+  console.log('[YouTube] Connecting to live chat...');
+  try {
+    const { connectToLiveChat } = require('./src/platforms/youtube/index');
+    const result = await connectToLiveChat(apiKey, channelId);
+    console.log('[YouTube] Chat connection result:', result);
+    return result;
+  } catch (error) {
+    console.error('[YouTube] Chat connection error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('ipc-youtube-disconnect-chat', async (event) => {
+  console.log('[YouTube] Disconnecting from live chat...');
+  try {
+    const { disconnectFromLiveChat } = require('./src/platforms/youtube/index');
+    const result = await disconnectFromLiveChat();
+    console.log('[YouTube] Disconnect result:', result);
+    return result;
+  } catch (error) {
+    console.error('[YouTube] Disconnect error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('ipc-youtube-is-authenticated', async (event) => {
+  try {
+    const { isAuthenticated } = require('./src/platforms/youtube/index');
+    return { success: true, authenticated: isAuthenticated() };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('ipc-youtube-logout', async (event) => {
+  console.log('[YouTube] Logging out...');
+  try {
+    const { logout } = require('./src/platforms/youtube/index');
+    const result = await logout();
+    console.log('[YouTube] Logout result:', result);
+    return result;
+  } catch (error) {
+    console.error('[YouTube] Logout error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Debug log handler to help with troubleshooting
+ipcMain.on('debug-log', (event, { message, data }) => {
+  console.log('[DEBUG-RENDERER]', message, data ? JSON.stringify(data) : '');
 });
 
 // Discord IPC handlers

@@ -113,6 +113,9 @@
     // YouTube integration
     youtubeApiKey: { type: 'string', default: '', description: 'YouTube Data API v3 key' },
     youtubeChannelId: { type: 'string', default: '', description: 'YouTube channel ID' },
+    youtubeOAuthClientId: { type: 'string', default: '', description: 'YouTube OAuth Client ID' },
+    youtubeOAuthClientSecret: { type: 'string', default: '', description: 'YouTube OAuth Client Secret' },
+    youtubeOAuthTokens: { type: 'object', default: null, description: 'YouTube OAuth tokens' },
 
     // Discord integration
     discordBotToken: { type: 'string', default: '', description: 'Discord bot token' },
@@ -201,12 +204,21 @@
         result.settings[key] = schema[key].default;
       });
 
+      // Debug OAuth fields during migration
+      const oauthFields = ['youtubeOAuthClientId', 'youtubeOAuthClientSecret', 'youtubeOAuthTokens'];
+      console.log('[SchemaDebug] validateAndMigrate input rawSettings OAuth:', 
+        oauthFields.reduce((acc, field) => ({...acc, [field]: rawSettings?.[field]}), {}));
+
       // Apply and validate provided settings
       if (rawSettings && typeof rawSettings === 'object') {
         Object.entries(rawSettings).forEach(([key, value]) => {
           if (schema[key]) {
             const validation = this.validateField(key, value);
             if (validation.valid) {
+              // Special debug for OAuth fields
+              if (oauthFields.includes(key)) {
+                console.log(`[SchemaDebug] Processing ${key}: original="${value}" validated="${validation.value}"`);
+              }
               result.settings[key] = validation.value;
             } else {
               result.errors.push(validation.error);
@@ -219,6 +231,9 @@
           }
         });
       }
+
+      console.log('[SchemaDebug] validateAndMigrate output OAuth:', 
+        oauthFields.reduce((acc, field) => ({...acc, [field]: result.settings[field]}), {}));
 
       return result;
     },

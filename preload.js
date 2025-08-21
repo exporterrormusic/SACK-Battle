@@ -116,6 +116,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   validateYouTubeKey: async (apiKey) => ipcRenderer.invoke(CH.YOUTUBE_VALIDATE_KEY, apiKey),
   getYouTubeChannelInfo: async (channelId, apiKey) => ipcRenderer.invoke(CH.YOUTUBE_GET_CHANNEL_INFO, { channelId, apiKey }),
   
+  // YouTube OAuth methods
+  startYouTubeOAuth: (clientId, clientSecret) => 
+    ipcRenderer.invoke('ipc-youtube-start-oauth', { clientId, clientSecret }),
+  connectYouTubeLiveChat: (apiKey, channelId) => 
+    ipcRenderer.invoke('ipc-youtube-connect-chat', { apiKey, channelId }),
+  disconnectYouTubeLiveChat: () => 
+    ipcRenderer.invoke('ipc-youtube-disconnect-chat'),
+  isYouTubeAuthenticated: () => 
+    ipcRenderer.invoke('ipc-youtube-is-authenticated'),
+  logoutYouTube: () => 
+    ipcRenderer.invoke('ipc-youtube-logout'),
+  
   // Discord Integration
   connectDiscord: async (token, channelId) => ipcRenderer.invoke(CH.DISCORD_CONNECT, { token, channelId }),
   disconnectDiscord: async () => ipcRenderer.invoke(CH.DISCORD_DISCONNECT),
@@ -127,6 +139,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Test function
   testYouTubeIPC: async () => ipcRenderer.invoke('test-youtube-ipc'),
+  
+  // Debug helper for logging to main process
+  logToMain: (message, data) => ipcRenderer.send('debug-log', { message, data }),
   
   pickImageFile: async () => ipcRenderer.invoke(CH.PICK_IMAGE_FILE),
   getBossManifest: async () => ipcRenderer.invoke(CH.GET_BOSS_MANIFEST),

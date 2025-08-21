@@ -137,6 +137,11 @@ function playBossWelcome(path, bossName) {
     console.log('[BossWelcome] Skipped: waitingActive is true');
     return;
   }
+  // Skip intro SFX during prebattle sequence
+  if (window.__prebattleActive) {
+    console.log('[BossWelcome] Skipped: prebattle sequence active');
+    return;
+  }
   // Ensure audio settings are ready to avoid playing at default/incorrect volume
   try {
     const st = window.Game && window.Game.getState ? window.Game.getState() : null;
@@ -272,14 +277,14 @@ function stopAllMusic(reason){
   console.log('[AudioStopAll]', reason||'');
 }
 
-function initBossAudio(meta){
+function initBossAudio(meta, options = {}){
   // Defer init slightly until audio settings exist to ensure correct initial volumes
   try {
     const st = window.Game && window.Game.getState ? window.Game.getState() : null;
     const hasAudioSettings = !!(st && st.settings && st.settings.audioSettings &&
       typeof st.settings.audioSettings.sfxVolume === 'number' && typeof st.settings.audioSettings.musicVolume === 'number');
     if (!hasAudioSettings) {
-      setTimeout(()=>initBossAudio(meta), 120);
+      setTimeout(()=>initBossAudio(meta, options), 120);
       return;
     }
   } catch(_) {}
