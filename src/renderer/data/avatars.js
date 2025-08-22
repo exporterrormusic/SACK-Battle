@@ -23,6 +23,22 @@
       console.log(`[AvatarChange] YouTube user ${username} avatar change to ${requestedName}: ${ok ? 'success' : 'failed'}`);
     });
   }
+
+  // Listen for avatar change IPC event from DiscordService
+  if (window.electronAPI && window.electronAPI.onDiscordAvatarChange) {
+    // Use persistent handler for unlimited avatar changes
+    window.electronAPI.onDiscordAvatarChange(({ username, requestedName }) => {
+      console.log('[AvatarChange] Discord IPC event received (avatars.js):', { username, requestedName });
+      const ok = global.__changePlayerAvatar(username, requestedName);
+      if (window.electronAPI && window.electronAPI.sendDiscordMessage) {
+        if (ok) {
+          window.electronAPI.sendDiscordMessage(`@${username} avatar changed to ${requestedName}!`);
+        } else {
+          window.electronAPI.sendDiscordMessage(`@${username} avatar '${requestedName}' not found.`);
+        }
+      }
+    });
+  }
 })(typeof window!=='undefined'?window:globalThis);
 // avatars.js - persistent avatar assignment mapping per player
 

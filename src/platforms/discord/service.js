@@ -5,10 +5,11 @@ const { readSettingsFile } = require('../../system/settings');
 const { validateBotToken, getChannelInfo, sendMessage } = require('./index');
 
 class DiscordService {
-  constructor({ token, onCommand, onMessage, onStatus, debug }) {
+  constructor({ token, onCommand, onMessage, onAvatarChange, onStatus, debug }) {
     this.token = token;
     this.onCommand = onCommand || (() => {});
     this.onMessage = onMessage || (() => {});
+    this.onAvatarChange = onAvatarChange || (() => {});
     this.onStatus = onStatus || (() => {});
     this.debug = debug || (() => {});
     
